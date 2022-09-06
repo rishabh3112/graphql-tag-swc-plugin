@@ -5,7 +5,7 @@
     "author": "rishabh3112 <rishabh31121999@gmail.com>",
     "license": "ISC",
     "keywords": ["swc-plugin", "swc", "graphql"],
-    "main": "target/wasm32-wasi/release/swc-learning-plugin.wasm",
+    "main": "target/wasm32-wasi/release/graphql-tag-swc-plugin.wasm",
     "scripts": {
         "prepublishOnly": "cargo build-wasi --release"
     },

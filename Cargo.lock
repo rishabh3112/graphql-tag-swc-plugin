@@ -407,8 +407,6 @@ version = "0.1.0"
 dependencies = [
  "apollo-parser",
  "regex",
- "serde",
- "serde_json",
  "swc_common",
  "swc_core",
  "swc_ecma_parser",

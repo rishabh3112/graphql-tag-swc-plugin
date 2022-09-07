@@ -16,63 +16,8 @@ use apollo_parser::{
     },
     Parser,
 };
-
 use regex::Regex;
-use swc_common::Span;
-use swc_core::{
-    ast::*,
-    plugin::{plugin_transform, proxies::TransformPluginProgramMetadata},
-    testing_transform::test,
-    visit::{as_folder, FoldWith, VisitMut},
-};
-
-pub struct TransformVisitor;
-
-fn parse_gql_string(body: String, span: Span) -> Option<Box<Expr>> {
-    let parser = Parser::new(&body);
-    let ast = parser.parse();
-    assert_eq!(0, ast.errors().len());
-
-    let doc = ast.document();
-
-    create_document(doc, span)
-}
-
-impl VisitMut for TransformVisitor {
-    fn visit_mut_var_decl(&mut self, node: &mut VarDecl) {
-        let decls = &mut node.decls;
-        for mut decl in decls {
-            if let Some(initial) = &mut decl.init {
-                if let Some(tag_tpl) = initial.as_mut_tagged_tpl() {
-                    if let Some(tag) = tag_tpl.tag.as_mut_ident() {
-                        if &tag.sym != "gql" {
-                            return;
-                        }
-
-                        if tag_tpl.tpl.quasis.len() == 0 {
-                            return;
-                        }
-
-                        let template = &mut tag_tpl.tpl;
-                        let quasi = &mut template.quasis[0];
-                        let data = &mut quasi.raw;
-                        let gql_body = data.to_string();
-
-                        // TODO: parse gql and insert it here
-                        let gql_swc_ast = parse_gql_string(gql_body.clone(), tag_tpl.span);
-
-                        decl.init = gql_swc_ast;
-                    }
-                }
-            }
-        }
-    }
-}
-
-#[plugin_transform]
-pub fn process_transform(program: Program, _metadata: TransformPluginProgramMetadata) -> Program {
-    program.fold_with(&mut as_folder(TransformVisitor))
-}
+use swc_plugin::{ast::*, plugin_transform, syntax_pos::Span, TransformPluginProgramMetadata};
 
 fn create_key_value_prop(key: String, value: Expr) -> PropOrSpread {
     PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
@@ -744,18 +689,184 @@ fn get_operation_token(operation_type: Option<OperationType>) -> String {
     "query".into()
 }
 
-test!(
-    Default::default(),
-    |_| as_folder(TransformVisitor),
-    valid,
-    // Input codes
-    r#"const a = gql`
-    query aaa ($a: I = "a", $b: b){
-        user(id: $ss) {
-          firstName
-          lastName
+fn parse_gql_string(body: String, span: Span) -> Option<Box<Expr>> {
+    let parser = Parser::new(&body);
+    let ast = parser.parse();
+    assert_eq!(0, ast.errors().len());
+
+    let doc = ast.document();
+
+    create_document(doc, span)
+}
+
+struct TransformVisitor;
+
+impl VisitMut for TransformVisitor {
+    noop_visit_mut_type!();
+
+    fn visit_mut_var_decl(&mut self, node: &mut VarDecl) {
+        let decls = &mut node.decls;
+        for mut decl in decls {
+            if let Some(initial) = &mut decl.init {
+                if let Some(tag_tpl) = initial.as_mut_tagged_tpl() {
+                    if let Some(tag) = tag_tpl.tag.as_mut_ident() {
+                        if &tag.sym != "gql" {
+                            return;
+                        }
+
+                        if tag_tpl.tpl.quasis.len() == 0 {
+                            return;
+                        }
+
+                        let template = &mut tag_tpl.tpl;
+                        let quasi = &mut template.quasis[0];
+                        let data = &mut quasi.raw;
+                        let gql_body = data.to_string();
+
+                        // TODO: parse gql and insert it here
+                        let gql_swc_ast = parse_gql_string(gql_body.clone(), tag_tpl.span);
+
+                        decl.init = gql_swc_ast;
+                    }
+                }
+            }
         }
-      }    `"#,
-    // Output codes after transformed with plugin
-    r#"const a = "apple""#
-);
+    }
+}
+
+#[plugin_transform]
+pub fn process_transform(program: Program, _metadata: TransformPluginProgramMetadata) -> Program {
+    program.fold_with(&mut as_folder(TransformVisitor))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use swc_ecma_transforms_testing::test;
+
+    test!(
+        Default::default(),
+        |_| as_folder(TransformVisitor),
+        valid,
+        // Input codes
+        r#"const a = gql`
+        query aaa ($a: I = "a", $b: b){
+            user(id: $ss) {
+              firstName
+              lastName
+            }
+          }`"#,
+        // Output codes after transformed with plugin
+        r#"const a = {
+    "kind": "Document",
+    "definitions": [
+        {
+            "kind": "OperationDefinition",
+            "name": {
+                "kind": "Name",
+                "value": "aaa"
+            },
+            "directives": [],
+            "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                    {
+                        "kind": "Field",
+                        "name": {
+                            "kind": "Name",
+                            "value": "user"
+                        },
+                        "arguments": [
+                            {
+                                "kind": "Argument",
+                                "name": {
+                                    "kind": "Name",
+                                    "value": "id"
+                                },
+                                "value": {
+                                    "kind": "Variable",
+                                    "name": {
+                                        "kind": "Name",
+                                        "value": "ss"
+                                    }
+                                }
+                            }
+                        ],
+                        "directives": [],
+                        "selectionSet": {
+                            "kind": "SelectionSet",
+                            "selections": [
+                                {
+                                    "kind": "Field",
+                                    "name": {
+                                        "kind": "Name",
+                                        "value": "firstName"
+                                    },
+                                    "arguments": [],
+                                    "directives": [],
+                                    "selectionSet": {}
+                                },
+                                {
+                                    "kind": "Field",
+                                    "name": {
+                                        "kind": "Name",
+                                        "value": "lastName"
+                                    },
+                                    "arguments": [],
+                                    "directives": [],
+                                    "selectionSet": {}
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "variableDefinitions": [
+                {
+                    "kind": "VariableDefinition",
+                    "directives": [],
+                    "defaultValue": {
+                        "kind": "StringValue",
+                        "value": "a"
+                    },
+                    "type": {
+                        "kind": "NamedType",
+                        "name": {
+                            "kind": "Name",
+                            "value": "I"
+                        }
+                    },
+                    "variable": {
+                        "kind": "Variable",
+                        "name": {
+                            "kind": "Name",
+                            "value": "a"
+                        }
+                    }
+                },
+                {
+                    "kind": "VariableDefinition",
+                    "directives": [],
+                    "defaultValue": {},
+                    "type": {
+                        "kind": "NamedType",
+                        "name": {
+                            "kind": "Name",
+                            "value": "b"
+                        }
+                    },
+                    "variable": {
+                        "kind": "Variable",
+                        "name": {
+                            "kind": "Name",
+                            "value": "b"
+                        }
+                    }
+                }
+            ],
+            "operation": "query"
+        }
+    ]
+};"#
+    );
+}

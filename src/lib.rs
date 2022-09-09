@@ -113,26 +113,25 @@ fn create_operation_definition(definition: OperationDefinition, span: Span) -> B
         "directives".into(),
         create_directives(definition.directives(), span),
     );
-    let selection_set = create_key_value_prop(
-        "selectionSet".into(),
-        create_selection_set(definition.selection_set(), span),
-    );
+
     let operation = create_key_value_prop(
         "operation".into(),
         get_operation_token(definition.operation_type()).into(),
     );
 
-    let opr_def = ObjectLit {
+    let mut opr_def = ObjectLit {
         span,
-        props: vec![
-            kind,
-            name,
-            directives,
-            selection_set,
-            variable_definitions,
-            operation,
-        ],
+        props: vec![kind, name, directives, variable_definitions, operation],
     };
+
+    if definition.selection_set().is_some() {
+        let selection_set = create_key_value_prop(
+            "selectionSet".into(),
+            create_selection_set(definition.selection_set(), span),
+        );
+
+        opr_def.props.push(selection_set);
+    }
 
     Box::new(Expr::Object(opr_def))
 }
@@ -153,23 +152,34 @@ fn create_fragment_definition(definition: FragmentDefinition, span: Span) -> Box
             span,
         ),
     );
-    let type_condition = create_key_value_prop(
-        "typeCondition".into(),
-        create_type_condition(definition.type_condition(), span),
-    );
+
     let directives = create_key_value_prop(
         "directives".into(),
         create_directives(definition.directives(), span),
     );
-    let selection_set = create_key_value_prop(
-        "selectionSet".into(),
-        create_selection_set(definition.selection_set(), span),
-    );
 
-    let frag_def = ObjectLit {
+    let mut frag_def = ObjectLit {
         span,
-        props: vec![kind, name, type_condition, directives, selection_set],
+        props: vec![kind, name, directives],
     };
+
+    if definition.type_condition().is_some() {
+        let type_condition = create_key_value_prop(
+            "typeCondition".into(),
+            create_type_condition(definition.type_condition(), span),
+        );
+
+        frag_def.props.push(type_condition);
+    }
+
+    if definition.selection_set().is_some() {
+        let selection_set = create_key_value_prop(
+            "selectionSet".into(),
+            create_selection_set(definition.selection_set(), span),
+        );
+
+        frag_def.props.push(selection_set);
+    }
 
     Box::new(Expr::Object(frag_def))
 }
@@ -206,16 +216,24 @@ fn create_variable_definition(
         "variable".into(),
         create_variable_value(variable_def.variable().unwrap(), span),
     );
-    let default_value = create_key_value_prop(
-        "defaultValue".into(),
-        create_default_value(variable_def.default_value(), span),
-    );
-    let type_def = create_key_value_prop("type".into(), create_type(variable_def.ty(), span));
 
-    let var_def = ObjectLit {
+    let mut var_def = ObjectLit {
         span,
-        props: vec![kind, directives, default_value, type_def, variable],
+        props: vec![kind, directives, variable],
     };
+
+    if variable_def.ty().is_some() {
+        let type_def = create_key_value_prop("type".into(), create_type(variable_def.ty(), span));
+        var_def.props.push(type_def);
+    }
+
+    if variable_def.default_value().is_some() {
+        let default_value = create_key_value_prop(
+            "defaultValue".into(),
+            create_default_value(variable_def.default_value(), span),
+        );
+        var_def.props.push(default_value);
+    }
 
     Some(ExprOrSpread {
         spread: None,
@@ -278,12 +296,16 @@ fn create_named_type(named_type: NamedType, span: Span) -> Expr {
 
 fn create_list_type(list_type: ListType, span: Span) -> Expr {
     let kind = create_key_value_prop("kind".into(), "ListType".into());
-    let type_def = create_key_value_prop("type".into(), create_type(list_type.ty(), span));
 
-    let type_object = ObjectLit {
+    let mut type_object = ObjectLit {
         span,
-        props: vec![kind, type_def],
+        props: vec![kind],
     };
+
+    if list_type.ty().is_some() {
+        let type_def = create_key_value_prop("type".into(), create_type(list_type.ty(), span));
+        type_object.props.push(type_def);
+    }
 
     Expr::Object(type_object)
 }
@@ -396,14 +418,20 @@ fn create_field(field: Field, span: Span) -> Option<ExprOrSpread> {
         "directives".into(),
         create_directives(field.directives(), span),
     );
-    let sel_set = create_key_value_prop(
-        "selectionSet".into(),
-        create_selection_set(field.selection_set(), span),
-    );
-    let sel = ObjectLit {
+
+    let mut sel = ObjectLit {
         span,
-        props: vec![kind, name, arguments, directives, sel_set],
+        props: vec![kind, name, arguments, directives],
     };
+
+    if field.selection_set().is_some() {
+        let sel_set = create_key_value_prop(
+            "selectionSet".into(),
+            create_selection_set(field.selection_set(), span),
+        );
+
+        sel.props.push(sel_set);
+    }
 
     Some(ExprOrSpread {
         spread: None,
@@ -441,23 +469,34 @@ fn create_fragment_spread(frag_spread: FragmentSpread, span: Span) -> Option<Exp
 
 fn create_inline_fragment(inline_frag: InlineFragment, span: Span) -> Option<ExprOrSpread> {
     let kind = create_key_value_prop("kind".into(), "InlineFragment".into());
-    let type_condition = create_key_value_prop(
-        "typeCondition".into(),
-        create_type_condition(inline_frag.type_condition(), span),
-    );
+
     let directives = create_key_value_prop(
         "directives".into(),
         create_directives(inline_frag.directives(), span),
     );
-    let sel_set = create_key_value_prop(
-        "selectionSet".into(),
-        create_selection_set(inline_frag.selection_set(), span),
-    );
 
-    let inline_frag_object = ObjectLit {
+    let mut inline_frag_object = ObjectLit {
         span,
-        props: vec![kind, type_condition, directives, sel_set],
+        props: vec![kind, directives],
     };
+
+    if inline_frag.type_condition().is_some() {
+        let type_condition = create_key_value_prop(
+            "typeCondition".into(),
+            create_type_condition(inline_frag.type_condition(), span),
+        );
+
+        inline_frag_object.props.push(type_condition);
+    }
+
+    if inline_frag.selection_set().is_some() {
+        let sel_set = create_key_value_prop(
+            "selectionSet".into(),
+            create_selection_set(inline_frag.selection_set(), span),
+        );
+
+        inline_frag_object.props.push(sel_set);
+    }
 
     Some(ExprOrSpread {
         spread: None,

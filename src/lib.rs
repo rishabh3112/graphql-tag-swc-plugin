@@ -6,6 +6,8 @@
 // - tag name is every where => gql - no need to test import statements for alias
 // - No loc props
 
+use std::collections::HashMap;
+
 use apollo_parser::{
     ast::{
         Argument, Arguments, AstChildren, BooleanValue, DefaultValue, Definition, Directives,
@@ -26,12 +28,51 @@ fn create_key_value_prop(key: String, value: Expr) -> PropOrSpread {
     })))
 }
 
-fn create_document(document: Document, span: Span, body: String) -> Option<Box<Expr>> {
+fn create_document(
+    document: Document,
+    span: Span,
+    body: String,
+    _expressions: Vec<Box<Expr>>,
+    _expr_def_map: &mut HashMap<String, Expr>,
+) -> Option<Box<Expr>> {
     let kind = create_key_value_prop("kind".into(), "Document".into());
+    let definitions_expr = create_definitions(document.definitions(), span);
+
+    let mut all_expressions = vec![];
+
+    for _expression in _expressions.clone() {
+        let member_expr_for_definitions = MemberExpr {
+            span,
+            obj: _expression,
+            prop: MemberProp::Ident(Ident::new("definitions".into(), span)),
+        };
+
+        all_expressions.push(ExprOrSpread {
+            spread: None,
+            expr: Box::new(Expr::Member(member_expr_for_definitions)),
+        });
+    }
+
+    let concat_call_expr = Expr::Call(CallExpr {
+        span,
+        callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
+            span,
+            obj: Box::new(definitions_expr.clone()),
+            prop: MemberProp::Ident(Ident::new("concat".into(), span)),
+        }))),
+        args: all_expressions,
+        type_args: None,
+    });
+
     let definitions = create_key_value_prop(
         "definitions".into(),
-        create_definitions(document.definitions(), span),
+        if _expressions.len() > 0 {
+            concat_call_expr
+        } else {
+            definitions_expr
+        },
     );
+
     let loc = create_key_value_prop("loc".into(), create_loc(body, span));
 
     let document_object_lit = ObjectLit {
@@ -260,7 +301,7 @@ fn create_type(type_def: Option<Type>, span: Span) -> Expr {
 }
 
 fn create_not_null_type(not_null_type: NonNullType, span: Span) -> Expr {
-    let kind = create_key_value_prop("kind".into(), "NotNullType".into());
+    let kind = create_key_value_prop("kind".into(), "NonNullType".into());
 
     let type_expr: Expr;
     if not_null_type.named_type().is_some() {
@@ -317,6 +358,7 @@ fn create_name(name: String, span: Span) -> Expr {
         span,
         props: vec![kind, value],
     };
+
     Expr::Object(name)
 }
 
@@ -386,6 +428,7 @@ fn create_selection_set(selection_set: Option<SelectionSet>, span: Span) -> Expr
 
 fn create_selections(selections: AstChildren<Selection>, span: Span) -> Expr {
     let mut all_selections = vec![];
+
     for selection in selections {
         all_selections.push(create_selection(selection, span));
     }
@@ -443,14 +486,17 @@ fn create_fragment_spread(frag_spread: FragmentSpread, span: Span) -> Option<Exp
     let kind = create_key_value_prop("kind".into(), "FragmentSpread".into());
     let name = create_key_value_prop(
         "name".into(),
-        frag_spread
-            .fragment_name()
-            .unwrap()
-            .name()
-            .unwrap()
-            .text()
-            .as_str()
-            .into(),
+        create_name(
+            frag_spread
+                .fragment_name()
+                .unwrap()
+                .name()
+                .unwrap()
+                .text()
+                .as_str()
+                .into(),
+            span,
+        ),
     );
     let directives = create_key_value_prop(
         "directives".into(),
@@ -748,38 +794,46 @@ fn create_list_value_values(values: AstChildren<Value>, span: Span) -> Expr {
 }
 
 fn get_operation_token(operation_type: Option<OperationType>) -> String {
-    let opr_tokn = operation_type.unwrap();
+    let opr_token = operation_type.unwrap();
 
-    if opr_tokn.query_token().is_some() {
-        return opr_tokn.query_token().unwrap().text().into();
+    if opr_token.query_token().is_some() {
+        return opr_token.query_token().unwrap().text().into();
     }
 
-    if opr_tokn.mutation_token().is_some() {
-        return opr_tokn.mutation_token().unwrap().text().into();
+    if opr_token.mutation_token().is_some() {
+        return opr_token.mutation_token().unwrap().text().into();
     }
 
-    if opr_tokn.subscription_token().is_some() {
-        return opr_tokn.subscription_token().unwrap().text().into();
+    if opr_token.subscription_token().is_some() {
+        return opr_token.subscription_token().unwrap().text().into();
     }
 
     "query".into()
 }
 
-fn parse_gql_string(body: String, span: Span) -> Option<Box<Expr>> {
+fn parse_gql_string(
+    body: String,
+    span: Span,
+    expressions: Vec<Box<Expr>>,
+    expr_def_map: &mut HashMap<String, Expr>,
+) -> Option<Box<Expr>> {
     let parser = Parser::new(&body);
     let ast = parser.parse();
     // assert_eq!(0, ast.errors().len());
 
     let doc = ast.document();
 
-    create_document(doc, span, body)
+    create_document(doc, span, body, expressions, expr_def_map)
 }
 
-struct TransformVisitor;
+struct TransformVisitor {
+    expr_def_map: HashMap<String, Expr>,
+}
 
 impl VisitMut for TransformVisitor {
     fn visit_mut_var_decl(&mut self, node: &mut VarDecl) {
         let decls = &mut node.decls;
+
         for mut decl in decls {
             if let Some(initial) = &mut decl.init {
                 if let Some(tag_tpl) = initial.as_mut_tagged_tpl() {
@@ -793,12 +847,30 @@ impl VisitMut for TransformVisitor {
                         }
 
                         let template = &mut tag_tpl.tpl;
-                        let quasi = &mut template.quasis[0];
-                        let data = &mut quasi.raw;
-                        let gql_body = data.to_string();
+                        let mut data: String = "".into();
+
+                        for quasi in &mut template.quasis {
+                            data += &quasi.raw;
+                        }
+
+                        let gql_raw_string = data.to_string();
+                        let no_gql_line_regex = Regex::new(r#"(^\$\{.*\}$)"#).unwrap();
+
+                        let gql_text = gql_raw_string
+                            .lines()
+                            .filter(|line| !no_gql_line_regex.is_match(line.trim()))
+                            .map(|line| String::from(line) + "\n")
+                            .collect();
+
+                        let expressions = template.exprs.clone();
 
                         // TODO: parse gql and insert it here
-                        let gql_swc_ast = parse_gql_string(gql_body.clone(), tag_tpl.span);
+                        let gql_swc_ast = parse_gql_string(
+                            gql_text,
+                            tag_tpl.span,
+                            expressions,
+                            &mut self.expr_def_map,
+                        );
 
                         decl.init = gql_swc_ast;
                     }
@@ -808,143 +880,151 @@ impl VisitMut for TransformVisitor {
     }
 }
 
-#[plugin_transform]
-pub fn process_transform(program: Program, _metadata: TransformPluginProgramMetadata) -> Program {
-    program.fold_with(&mut as_folder(TransformVisitor))
+impl TransformVisitor {
+    pub fn new() -> Self {
+        Self {
+            expr_def_map: HashMap::new(),
+        }
+    }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use swc_ecma_transforms_testing::test;
+#[plugin_transform]
+pub fn process_transform(program: Program, _metadata: TransformPluginProgramMetadata) -> Program {
+    program.fold_with(&mut as_folder(TransformVisitor::new()))
+}
 
-//     fn transform_visitor() -> impl 'static + Fold + VisitMut {
-//         as_folder(TransformVisitor)
-//     }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use swc_ecma_transforms_testing::test;
 
-//     test!(
-//         Default::default(),
-//         |_| as_folder(TransformVisitor),
-//         valid,
-//         // Input codes
-//         r#"const a = gql`
-//         query aaa ($a: I = "a", $b: b){
-//             user(id: $ss) {
-//               firstName
-//               lastName
-//             }
-//           }`"#,
-//         // Output codes after transformed with plugin
-//         r#"const a = {
-//     "kind": "Document",
-//     "definitions": [
-//         {
-//             "kind": "OperationDefinition",
-//             "name": {
-//                 "kind": "Name",
-//                 "value": "aaa"
-//             },
-//             "directives": [],
-//             "selectionSet": {
-//                 "kind": "SelectionSet",
-//                 "selections": [
-//                     {
-//                         "kind": "Field",
-//                         "name": {
-//                             "kind": "Name",
-//                             "value": "user"
-//                         },
-//                         "arguments": [
-//                             {
-//                                 "kind": "Argument",
-//                                 "name": {
-//                                     "kind": "Name",
-//                                     "value": "id"
-//                                 },
-//                                 "value": {
-//                                     "kind": "Variable",
-//                                     "name": {
-//                                         "kind": "Name",
-//                                         "value": "ss"
-//                                     }
-//                                 }
-//                             }
-//                         ],
-//                         "directives": [],
-//                         "selectionSet": {
-//                             "kind": "SelectionSet",
-//                             "selections": [
-//                                 {
-//                                     "kind": "Field",
-//                                     "name": {
-//                                         "kind": "Name",
-//                                         "value": "firstName"
-//                                     },
-//                                     "arguments": [],
-//                                     "directives": [],
-//                                     "selectionSet": {}
-//                                 },
-//                                 {
-//                                     "kind": "Field",
-//                                     "name": {
-//                                         "kind": "Name",
-//                                         "value": "lastName"
-//                                     },
-//                                     "arguments": [],
-//                                     "directives": [],
-//                                     "selectionSet": {}
-//                                 }
-//                             ]
-//                         }
-//                     }
-//                 ]
-//             },
-//             "variableDefinitions": [
-//                 {
-//                     "kind": "VariableDefinition",
-//                     "directives": [],
-//                     "defaultValue": {
-//                         "kind": "StringValue",
-//                         "value": "a"
-//                     },
-//                     "type": {
-//                         "kind": "NamedType",
-//                         "name": {
-//                             "kind": "Name",
-//                             "value": "I"
-//                         }
-//                     },
-//                     "variable": {
-//                         "kind": "Variable",
-//                         "name": {
-//                             "kind": "Name",
-//                             "value": "a"
-//                         }
-//                     }
-//                 },
-//                 {
-//                     "kind": "VariableDefinition",
-//                     "directives": [],
-//                     "defaultValue": {},
-//                     "type": {
-//                         "kind": "NamedType",
-//                         "name": {
-//                             "kind": "Name",
-//                             "value": "b"
-//                         }
-//                     },
-//                     "variable": {
-//                         "kind": "Variable",
-//                         "name": {
-//                             "kind": "Name",
-//                             "value": "b"
-//                         }
-//                     }
-//                 }
-//             ],
-//             "operation": "query"
-//         }
-//     ]
-// };"#
-//     );
-// }
+    fn transform_visitor() -> impl 'static + Fold + VisitMut {
+        as_folder(TransformVisitor::new())
+    }
+
+    test!(
+        swc_ecma_parser::Syntax::default(),
+        |_| transform_visitor(),
+        valid,
+        // Input codes
+        r#"const a = gql`
+        query aaa ($a: I = "a", $b: b){
+            user(id: $ss) {
+              firstName
+              lastName
+            }
+          }`"#,
+        // Output codes after transformed with plugin
+        r#"const a = {
+    "kind": "Document",
+    "definitions": [
+        {
+            "kind": "OperationDefinition",
+            "name": {
+                "kind": "Name",
+                "value": "aaa"
+            },
+            "directives": [],
+            "selectionSet": {
+                "kind": "SelectionSet",
+                "selections": [
+                    {
+                        "kind": "Field",
+                        "name": {
+                            "kind": "Name",
+                            "value": "user"
+                        },
+                        "arguments": [
+                            {
+                                "kind": "Argument",
+                                "name": {
+                                    "kind": "Name",
+                                    "value": "id"
+                                },
+                                "value": {
+                                    "kind": "Variable",
+                                    "name": {
+                                        "kind": "Name",
+                                        "value": "ss"
+                                    }
+                                }
+                            }
+                        ],
+                        "directives": [],
+                        "selectionSet": {
+                            "kind": "SelectionSet",
+                            "selections": [
+                                {
+                                    "kind": "Field",
+                                    "name": {
+                                        "kind": "Name",
+                                        "value": "firstName"
+                                    },
+                                    "arguments": [],
+                                    "directives": [],
+                                    "selectionSet": {}
+                                },
+                                {
+                                    "kind": "Field",
+                                    "name": {
+                                        "kind": "Name",
+                                        "value": "lastName"
+                                    },
+                                    "arguments": [],
+                                    "directives": [],
+                                    "selectionSet": {}
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "variableDefinitions": [
+                {
+                    "kind": "VariableDefinition",
+                    "directives": [],
+                    "defaultValue": {
+                        "kind": "StringValue",
+                        "value": "a"
+                    },
+                    "type": {
+                        "kind": "NamedType",
+                        "name": {
+                            "kind": "Name",
+                            "value": "I"
+                        }
+                    },
+                    "variable": {
+                        "kind": "Variable",
+                        "name": {
+                            "kind": "Name",
+                            "value": "a"
+                        }
+                    }
+                },
+                {
+                    "kind": "VariableDefinition",
+                    "directives": [],
+                    "defaultValue": {},
+                    "type": {
+                        "kind": "NamedType",
+                        "name": {
+                            "kind": "Name",
+                            "value": "b"
+                        }
+                    },
+                    "variable": {
+                        "kind": "Variable",
+                        "name": {
+                            "kind": "Name",
+                            "value": "b"
+                        }
+                    }
+                }
+            ],
+            "operation": "query"
+        }
+    ]
+};"#
+    );
+}

@@ -476,6 +476,15 @@ fn create_field(field: Field, span: Span) -> Option<ExprOrSpread> {
         sel.props.push(sel_set);
     }
 
+    if field.alias().is_some() {
+        let alias = create_key_value_prop(
+            "alias".into(),
+            create_name(field.alias().unwrap().name().unwrap().text().into(), span),
+        );
+
+        sel.props.push(alias);
+    }
+
     Some(ExprOrSpread {
         spread: None,
         expr: Box::new(Expr::Object(sel)),

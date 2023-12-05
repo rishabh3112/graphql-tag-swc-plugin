@@ -10,11 +10,11 @@ use std::collections::HashMap;
 
 use apollo_parser::{
     ast::{
-        Argument, Arguments, AstChildren, BooleanValue, DefaultValue, Definition, Directives,
-        Document, EnumValue, Field, FloatValue, FragmentDefinition, FragmentSpread, InlineFragment,
-        IntValue, ListType, ListValue, NamedType, NonNullType, NullValue, ObjectField, ObjectValue,
-        OperationDefinition, OperationType, Selection, SelectionSet, StringValue, Type,
-        TypeCondition, Value, Variable, VariableDefinition, VariableDefinitions,
+        Argument, Arguments, AstChildren, BooleanValue, DefaultValue, Definition, Directive,
+        Directives, Document, EnumValue, Field, FloatValue, FragmentDefinition, FragmentSpread,
+        InlineFragment, IntValue, ListType, ListValue, NamedType, NonNullType, NullValue,
+        ObjectField, ObjectValue, OperationDefinition, OperationType, Selection, SelectionSet,
+        StringValue, Type, TypeCondition, Value, Variable, VariableDefinition, VariableDefinitions,
     },
     Parser,
 };
@@ -479,11 +479,49 @@ fn create_type_condition(type_condition: Option<TypeCondition>, span: Span) -> E
     Expr::Object(type_cond)
 }
 
-// TODO: add directives support if required
-fn create_directives(_directives: Option<Directives>, span: Span) -> Expr {
+fn create_directive(directive: Directive, span: Span) -> Option<ExprOrSpread> {
+    let kind = create_key_value_prop("kind".into(), "Directive".into());
+    let name = create_key_value_prop(
+        "name".into(),
+        create_name(directive.name().unwrap().text().as_str().into(), span),
+    );
+
+    let mut directive_object = ObjectLit {
+        span,
+        props: vec![kind, name],
+    };
+
+    if directive.arguments().is_some() {
+        let arguments_prop = create_key_value_prop(
+            "arguments".into(),
+            create_arguments(directive.arguments(), span),
+        );
+
+        directive_object.props.push(arguments_prop)
+    }
+
+    Some(ExprOrSpread {
+        spread: None,
+        expr: Box::new(Expr::Object(directive_object)),
+    })
+}
+
+fn create_directives(directives: Option<Directives>, span: Span) -> Expr {
+    if directives.is_none() {
+        return Expr::Array(ArrayLit {
+            span,
+            elems: vec![],
+        });
+    }
+
     Expr::Array(ArrayLit {
         span,
-        elems: vec![],
+        elems: directives
+            .unwrap()
+            .directives()
+            .into_iter()
+            .map(|directive| create_directive(directive, span))
+            .collect(),
     })
 }
 

@@ -21,9 +21,10 @@ use apollo_parser::{
 
 use regex::Regex;
 use swc_common::Span;
+use swc_core::ecma::transforms::testing::test;
 use swc_core::plugin::{plugin_transform, proxies::TransformPluginProgramMetadata};
 use swc_ecma_ast::*;
-use swc_ecma_visit::{as_folder, FoldWith, VisitMut};
+use swc_ecma_visit::{as_folder, FoldWith, VisitMut, VisitMutWith};
 
 struct TransformVisitor {
     expr_def_map: HashMap<String, Expr>,
@@ -42,7 +43,7 @@ fn parse_gql_string(
     span: Span,
     expressions: Vec<Box<Expr>>,
     expr_def_map: &mut HashMap<String, Expr>,
-) -> Option<Box<Expr>> {
+) -> Expr {
     let parser = Parser::new(&body);
     let ast = parser.parse();
     assert_eq!(0, ast.errors().len());
@@ -53,49 +54,41 @@ fn parse_gql_string(
 }
 
 impl VisitMut for TransformVisitor {
-    fn visit_mut_var_decl(&mut self, node: &mut VarDecl) {
-        let decls = &mut node.decls;
-        for decl in decls {
-            if let Some(initial) = &mut decl.init {
-                if let Some(tag_tpl) = initial.as_mut_tagged_tpl() {
-                    if let Some(tag) = tag_tpl.tag.as_mut_ident() {
-                        if &tag.sym != "gql" {
-                            return;
-                        }
-
-                        if tag_tpl.tpl.quasis.len() == 0 {
-                            return;
-                        }
-
-                        let template = &mut tag_tpl.tpl;
-                        let mut data: String = "".into();
-
-                        for quasi in &mut template.quasis {
-                            data += &quasi.raw;
-                        }
-
-                        let gql_raw_string = data.to_string();
-                        let no_gql_line_regex = Regex::new(r#"(^\$\{.*\}$)"#).unwrap();
-
-                        let gql_text = gql_raw_string
-                            .lines()
-                            .filter(|line| !no_gql_line_regex.is_match(line.trim()))
-                            .map(|line| String::from(line) + "\n")
-                            .collect();
-
-                        let expressions = template.exprs.clone();
-                        // TODO: parse gql and insert it here
-                        let gql_swc_ast = parse_gql_string(
-                            gql_text,
-                            tag_tpl.span,
-                            expressions,
-                            &mut self.expr_def_map,
-                        );
-
-                        decl.init = gql_swc_ast;
-                    }
+    fn visit_mut_expr(&mut self, node: &mut Expr) {
+        if let Some(tag_tpl) = node.as_mut_tagged_tpl() {
+            if let Some(tag) = tag_tpl.tag.as_mut_ident() {
+                if &tag.sym != "gql" {
+                    return;
                 }
+                if tag_tpl.tpl.quasis.len() == 0 {
+                    return;
+                }
+
+                let template = &mut tag_tpl.tpl;
+                let mut data: String = "".into();
+
+                for quasi in &mut template.quasis {
+                    data += &quasi.raw;
+                }
+
+                let gql_raw_string = data.to_string();
+                let no_gql_line_regex = Regex::new(r#"(^\$\{.*\}$)"#).unwrap();
+
+                let gql_text = gql_raw_string
+                    .lines()
+                    .filter(|line| !no_gql_line_regex.is_match(line.trim()))
+                    .map(|line| String::from(line) + "\n")
+                    .collect();
+
+                let expressions = template.exprs.clone();
+                // TODO: parse gql and insert it here
+                let gql_swc_ast =
+                    parse_gql_string(gql_text, tag_tpl.span, expressions, &mut self.expr_def_map);
+
+                *node = gql_swc_ast;
             }
+        } else {
+            node.visit_mut_children_with(self)
         }
     }
 }
@@ -118,7 +111,7 @@ fn create_document(
     body: String,
     _expressions: Vec<Box<Expr>>,
     _expr_def_map: &mut HashMap<String, Expr>,
-) -> Option<Box<Expr>> {
+) -> Expr {
     let kind = create_key_value_prop("kind".into(), "Document".into());
     let definitions_expr = create_definitions(document.definitions(), span);
 
@@ -164,7 +157,7 @@ fn create_document(
         props: vec![kind, definitions, loc],
     };
 
-    Some(Box::new(Expr::Object(document_object_lit)))
+    Expr::Object(document_object_lit)
 }
 
 fn create_loc(body: String, span: Span) -> Expr {
@@ -938,3 +931,51 @@ fn get_operation_token(operation_type: Option<OperationType>) -> String {
 
     "query".into()
 }
+
+test!(
+    Default::default(),
+    |_| as_folder(TransformVisitor::new()),
+    default_export,
+    r#"export default gql`
+        query testQuery($a: String!) {
+            testQueryName(a: $a) @apple {
+                a
+                b
+                c
+            }
+        }
+    `;
+    "#
+);
+
+test!(
+    Default::default(),
+    |_| as_folder(TransformVisitor::new()),
+    export_from_arrow_expression,
+    r#"const a = () => { return gql`
+        query testQuery {
+            testQueryName {
+                a
+                b
+                c
+            }
+        }
+    `; }
+    "#
+);
+
+test!(
+    Default::default(),
+    |_| as_folder(TransformVisitor::new()),
+    export_from_function_expression,
+    r#"const a = function () { return gql`
+        query testQuery {
+            testQueryName {
+                a
+                b
+                c
+            }
+        }
+    `; }
+    "#
+);

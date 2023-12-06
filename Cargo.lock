@@ -389,7 +389,6 @@ dependencies = [
  "regex",
  "swc_common",
  "swc_ecma_ast",
- "swc_ecma_utils",
  "swc_ecma_visit",
 ]
 
@@ -398,7 +397,6 @@ name = "graphql-tag-swc-plugin"
 version = "0.1.0"
 dependencies = [
  "graphql-tag",
- "swc_common",
  "swc_core",
  "swc_ecma_ast",
  "swc_ecma_parser",

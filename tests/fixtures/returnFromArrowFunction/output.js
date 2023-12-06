@@ -1,4 +1,4 @@
-export default {
+const getQuery = () => ({
     "kind": "Document",
     "definitions": [
         {
@@ -105,9 +105,9 @@ export default {
     ],
     "loc": {
         "start": 0,
-        "end": 165,
+        "end": 102,
         "source": {
-            "body": "\n        query testQuery($a: String!) {\n            testQueryName(a: $a) @apple {\n                a\n                b\n                c\n            }\n        }\n    \n"
+          "body": "\n  query testQuery($a: String!) {\n    testQueryName(a: $a) @apple {\n      a\n      b\n      c\n    }\n  }\n"
         }
     }
-};
+});

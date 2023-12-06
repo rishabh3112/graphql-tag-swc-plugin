@@ -64,9 +64,9 @@ checksum = "a4668cab20f66d8d020e1fbc0ebe47217433c1b6c8f2040faf858554e394ace6"
 
 [[package]]
 name = "apollo-parser"
-version = "0.2.10"
+version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1bcfad5b20c7edffbfe4425828152f6f1575ea44b959031456ade138ccd732f0"
+checksum = "f901785c93a542be795c2703370ddb5f84d4e38606357fc56fefa4b42ab25151"
 dependencies = [
  "rowan",
 ]
@@ -382,7 +382,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 
 [[package]]
-name = "graphql-tag-swc-plugin"
+name = "graphql-tag"
 version = "0.1.0"
 dependencies = [
  "apollo-parser",
@@ -392,6 +392,19 @@ dependencies = [
  "swc_ecma_ast",
  "swc_ecma_utils",
  "swc_ecma_visit",
+]
+
+[[package]]
+name = "graphql-tag-swc-plugin"
+version = "0.1.0"
+dependencies = [
+ "graphql-tag",
+ "swc_common",
+ "swc_core",
+ "swc_ecma_ast",
+ "swc_ecma_parser",
+ "swc_ecma_visit",
+ "testing",
 ]
 
 [[package]]
@@ -542,9 +555,9 @@ checksum = "f665ee40bc4a3c5590afb1e9677db74a508659dfd71e126420da8274909a0167"
 
 [[package]]
 name = "memoffset"
-version = "0.6.5"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
+checksum = "5a634b1c61a95585bd15607c6ab0c4e5b226e695ff2800ba0cdccddf208c406c"
 dependencies = [
  "autocfg",
 ]
@@ -928,9 +941,9 @@ dependencies = [
 
 [[package]]
 name = "rowan"
-version = "0.15.8"
+version = "0.15.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e88acf7b001007e9e8c989fe7449f6601d909e5dd2c56399fc158977ad6c56e8"
+checksum = "906057e449592587bf6724f00155bf82a6752c868d78a8fb3aa41f4e6357cfe8"
 dependencies = [
  "countme",
  "hashbrown 0.12.3",
@@ -1627,9 +1640,9 @@ dependencies = [
 
 [[package]]
 name = "text-size"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "288cb548dbe72b652243ea797201f3d481a0609a967980fcc5b2315ea811560a"
+checksum = "f18aa187839b2bdb1ad2fa35ead8c4c2976b64e4363c386d45ac0f7ee85c9233"
 
 [[package]]
 name = "textwrap"

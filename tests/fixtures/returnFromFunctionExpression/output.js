@@ -1,4 +1,4 @@
-const a = function() {
+const getQuery = function() {
     return {
         "kind": "Document",
         "definitions": [
@@ -9,7 +9,29 @@ const a = function() {
                     "value": "testQuery"
                 },
                 "directives": [],
-                "variableDefinitions": [],
+                "variableDefinitions": [
+                    {
+                        "kind": "VariableDefinition",
+                        "directives": [],
+                        "variable": {
+                            "kind": "Variable",
+                            "name": {
+                                "kind": "Name",
+                                "value": "a"
+                            }
+                        },
+                        "type": {
+                            "kind": "NonNullType",
+                            "type": {
+                                "kind": "NamedType",
+                                "name": {
+                                    "kind": "Name",
+                                    "value": "String"
+                                }
+                            }
+                        }
+                    }
+                ],
                 "operation": "query",
                 "selectionSet": {
                     "kind": "SelectionSet",
@@ -20,8 +42,31 @@ const a = function() {
                                 "kind": "Name",
                                 "value": "testQueryName"
                             },
-                            "arguments": [],
-                            "directives": [],
+                            "arguments": [
+                                {
+                                    "kind": "Argument",
+                                    "name": {
+                                        "kind": "Name",
+                                        "value": "a"
+                                    },
+                                    "value": {
+                                        "kind": "Variable",
+                                        "name": {
+                                            "kind": "Name",
+                                            "value": "a"
+                                        }
+                                    }
+                                }
+                            ],
+                            "directives": [
+                                {
+                                    "kind": "Directive",
+                                    "name": {
+                                        "kind": "Name",
+                                        "value": "apple"
+                                    }
+                                }
+                            ],
                             "selectionSet": {
                                 "kind": "SelectionSet",
                                 "selections": [
@@ -61,9 +106,9 @@ const a = function() {
         ],
         "loc": {
             "start": 0,
-            "end": 138,
+            "end": 119,
             "source": {
-                "body": "\n        query testQuery {\n            testQueryName {\n                a\n                b\n                c\n            }\n        }\n    \n"
+                "body": "\n    query testQuery($a: String!) {\n      testQueryName(a: $a) @apple {\n        a\n        b\n        c\n      }\n    }\n  \n"
             }
         }
     };

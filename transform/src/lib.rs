@@ -17,73 +17,7 @@ use swc_ecma_visit::{VisitMut, VisitMutWith};
 
 use regex::Regex;
 
-pub struct TransformVisitor {
-    expr_def_map: HashMap<String, Expr>,
-}
-
-impl TransformVisitor {
-    pub fn new() -> Self {
-        Self {
-            expr_def_map: HashMap::new(),
-        }
-    }
-}
-
-fn parse_gql_string(
-    body: String,
-    span: Span,
-    expressions: Vec<Box<Expr>>,
-    expr_def_map: &mut HashMap<String, Expr>,
-) -> Expr {
-    let parser = Parser::new(&body);
-    let ast = parser.parse();
-    assert_eq!(0, ast.errors().len());
-
-    let doc = ast.document();
-
-    create_document(doc, span, body, expressions, expr_def_map)
-}
-
-impl VisitMut for TransformVisitor {
-    fn visit_mut_expr(&mut self, node: &mut Expr) {
-        if let Some(tag_tpl) = node.as_mut_tagged_tpl() {
-            if let Some(tag) = tag_tpl.tag.as_mut_ident() {
-                if &tag.sym != "gql" {
-                    return;
-                }
-                if tag_tpl.tpl.quasis.len() == 0 {
-                    return;
-                }
-
-                let template = &mut tag_tpl.tpl;
-                let mut data: String = "".into();
-
-                for quasi in &mut template.quasis {
-                    data += &quasi.raw;
-                }
-
-                let gql_raw_string = data.to_string();
-                let no_gql_line_regex = Regex::new(r#"(^\$\{.*\}$)"#).unwrap();
-
-                let gql_text = gql_raw_string
-                    .lines()
-                    .filter(|line| !no_gql_line_regex.is_match(line.trim()))
-                    .map(|line| String::from(line) + "\n")
-                    .collect();
-
-                let expressions = template.exprs.clone();
-                // TODO: parse gql and insert it here
-                let gql_swc_ast =
-                    parse_gql_string(gql_text, tag_tpl.span, expressions, &mut self.expr_def_map);
-
-                *node = gql_swc_ast;
-            }
-        } else {
-            node.visit_mut_children_with(self)
-        }
-    }
-}
-
+// utils
 fn create_key_value_prop(key: String, value: Expr) -> PropOrSpread {
     PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
         key: PropName::Str(key.into()),
@@ -91,203 +25,25 @@ fn create_key_value_prop(key: String, value: Expr) -> PropOrSpread {
     })))
 }
 
-fn create_document(
-    document: Document,
-    span: Span,
-    body: String,
-    _expressions: Vec<Box<Expr>>,
-    _expr_def_map: &mut HashMap<String, Expr>,
-) -> Expr {
-    let kind = create_key_value_prop("kind".into(), "Document".into());
-    let definitions_expr = create_definitions(document.definitions(), span);
+fn get_operation_token(operation_type: Option<OperationType>) -> String {
+    let opr_token = operation_type.unwrap();
 
-    let mut all_expressions = vec![];
-
-    for _expression in _expressions.clone() {
-        let member_expr_for_definitions = MemberExpr {
-            span,
-            obj: _expression,
-            prop: MemberProp::Ident(Ident::new("definitions".into(), span)),
-        };
-
-        all_expressions.push(ExprOrSpread {
-            spread: None,
-            expr: Box::new(Expr::Member(member_expr_for_definitions)),
-        });
+    if opr_token.query_token().is_some() {
+        return opr_token.query_token().unwrap().text().into();
     }
 
-    let concat_call_expr = Expr::Call(CallExpr {
-        span,
-        callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
-            span,
-            obj: Box::new(definitions_expr.clone()),
-            prop: MemberProp::Ident(Ident::new("concat".into(), span)),
-        }))),
-        args: all_expressions,
-        type_args: None,
-    });
-
-    let definitions = create_key_value_prop(
-        "definitions".into(),
-        if _expressions.len() > 0 {
-            concat_call_expr
-        } else {
-            definitions_expr
-        },
-    );
-
-    let loc = create_key_value_prop("loc".into(), create_loc(body, span));
-
-    let document_object_lit = ObjectLit {
-        span,
-        props: vec![kind, definitions, loc],
-    };
-
-    Expr::Object(document_object_lit)
-}
-
-fn create_loc(body: String, span: Span) -> Expr {
-    let start = create_key_value_prop("start".into(), Expr::Lit(Lit::Num(Number::from(0))));
-    let end = create_key_value_prop("end".into(), Expr::Lit(Lit::Num(Number::from(body.len()))));
-    let source_body = create_key_value_prop("body".into(), Expr::Lit(Lit::Str(body.into())));
-    let source_expr = Expr::Object(ObjectLit {
-        span,
-        props: vec![source_body],
-    });
-    let source = create_key_value_prop("source".into(), source_expr);
-
-    Expr::Object(ObjectLit {
-        span,
-        props: vec![start, end, source],
-    })
-}
-
-fn create_definitions(definitions: AstChildren<Definition>, span: Span) -> Expr {
-    let mut all_definitions = vec![];
-    for def in definitions {
-        all_definitions.push(create_definition(def, span));
+    if opr_token.mutation_token().is_some() {
+        return opr_token.mutation_token().unwrap().text().into();
     }
 
-    Expr::Array(ArrayLit {
-        span,
-        elems: all_definitions,
-    })
-}
-
-fn create_definition(definition: Definition, span: Span) -> Option<ExprOrSpread> {
-    let def_expr = match definition {
-        Definition::FragmentDefinition(frag_def) => create_fragment_definition(frag_def, span),
-        Definition::OperationDefinition(operation_def) => {
-            create_operation_definition(operation_def, span)
-        }
-        Definition::DirectiveDefinition(_) => todo!(),
-        Definition::SchemaDefinition(_) => todo!(),
-        Definition::ScalarTypeDefinition(_) => todo!(),
-        Definition::ObjectTypeDefinition(_) => todo!(),
-        Definition::InterfaceTypeDefinition(_) => todo!(),
-        Definition::UnionTypeDefinition(_) => todo!(),
-        Definition::EnumTypeDefinition(_) => todo!(),
-        Definition::InputObjectTypeDefinition(_) => todo!(),
-        Definition::SchemaExtension(_) => todo!(),
-        Definition::ScalarTypeExtension(_) => todo!(),
-        Definition::ObjectTypeExtension(_) => todo!(),
-        Definition::InterfaceTypeExtension(_) => todo!(),
-        Definition::UnionTypeExtension(_) => todo!(),
-        Definition::EnumTypeExtension(_) => todo!(),
-        Definition::InputObjectTypeExtension(_) => todo!(),
-    };
-
-    Some(ExprOrSpread {
-        spread: None,
-        expr: def_expr,
-    })
-}
-
-fn create_operation_definition(definition: OperationDefinition, span: Span) -> Box<Expr> {
-    let kind = create_key_value_prop("kind".into(), "OperationDefinition".into());
-    let name = create_key_value_prop(
-        "name".into(),
-        create_name(definition.name().unwrap().text().as_str().into(), span),
-    );
-    let variable_definitions = create_key_value_prop(
-        "variableDefinitions".into(),
-        create_variable_definitions(definition.variable_definitions(), span),
-    );
-    let directives = create_key_value_prop(
-        "directives".into(),
-        create_directives(definition.directives(), span),
-    );
-
-    let operation = create_key_value_prop(
-        "operation".into(),
-        get_operation_token(definition.operation_type()).into(),
-    );
-
-    let mut opr_def = ObjectLit {
-        span,
-        props: vec![kind, name, directives, variable_definitions, operation],
-    };
-
-    if definition.selection_set().is_some() {
-        let selection_set = create_key_value_prop(
-            "selectionSet".into(),
-            create_selection_set(definition.selection_set(), span),
-        );
-
-        opr_def.props.push(selection_set);
+    if opr_token.subscription_token().is_some() {
+        return opr_token.subscription_token().unwrap().text().into();
     }
 
-    Box::new(Expr::Object(opr_def))
+    "query".into()
 }
 
-fn create_fragment_definition(definition: FragmentDefinition, span: Span) -> Box<Expr> {
-    let kind = create_key_value_prop("kind".into(), "FragmentDefinition".into());
-    let name = create_key_value_prop(
-        "name".into(),
-        create_name(
-            definition
-                .fragment_name()
-                .unwrap()
-                .name()
-                .unwrap()
-                .text()
-                .as_str()
-                .into(),
-            span,
-        ),
-    );
-
-    let directives = create_key_value_prop(
-        "directives".into(),
-        create_directives(definition.directives(), span),
-    );
-
-    let mut frag_def = ObjectLit {
-        span,
-        props: vec![kind, name, directives],
-    };
-
-    if definition.type_condition().is_some() {
-        let type_condition = create_key_value_prop(
-            "typeCondition".into(),
-            create_type_condition(definition.type_condition(), span),
-        );
-
-        frag_def.props.push(type_condition);
-    }
-
-    if definition.selection_set().is_some() {
-        let selection_set = create_key_value_prop(
-            "selectionSet".into(),
-            create_selection_set(definition.selection_set(), span),
-        );
-
-        frag_def.props.push(selection_set);
-    }
-
-    Box::new(Expr::Object(frag_def))
-}
-
+// nodes
 fn create_variable_definitions(variable_defs: Option<VariableDefinitions>, span: Span) -> Expr {
     if variable_defs.is_none() {
         return Expr::Array(ArrayLit {
@@ -900,20 +656,267 @@ fn create_list_value_values(values: AstChildren<Value>, span: Span) -> Expr {
     })
 }
 
-fn get_operation_token(operation_type: Option<OperationType>) -> String {
-    let opr_token = operation_type.unwrap();
+fn create_operation_definition(definition: OperationDefinition, span: Span) -> Box<Expr> {
+    let kind = create_key_value_prop("kind".into(), "OperationDefinition".into());
+    let name = create_key_value_prop(
+        "name".into(),
+        create_name(definition.name().unwrap().text().as_str().into(), span),
+    );
+    let variable_definitions = create_key_value_prop(
+        "variableDefinitions".into(),
+        create_variable_definitions(definition.variable_definitions(), span),
+    );
+    let directives = create_key_value_prop(
+        "directives".into(),
+        create_directives(definition.directives(), span),
+    );
 
-    if opr_token.query_token().is_some() {
-        return opr_token.query_token().unwrap().text().into();
+    let operation = create_key_value_prop(
+        "operation".into(),
+        get_operation_token(definition.operation_type()).into(),
+    );
+
+    let mut opr_def = ObjectLit {
+        span,
+        props: vec![kind, name, directives, variable_definitions, operation],
+    };
+
+    if definition.selection_set().is_some() {
+        let selection_set = create_key_value_prop(
+            "selectionSet".into(),
+            create_selection_set(definition.selection_set(), span),
+        );
+
+        opr_def.props.push(selection_set);
     }
 
-    if opr_token.mutation_token().is_some() {
-        return opr_token.mutation_token().unwrap().text().into();
+    Box::new(Expr::Object(opr_def))
+}
+
+fn create_fragment_definition(definition: FragmentDefinition, span: Span) -> Box<Expr> {
+    let kind = create_key_value_prop("kind".into(), "FragmentDefinition".into());
+    let name = create_key_value_prop(
+        "name".into(),
+        create_name(
+            definition
+                .fragment_name()
+                .unwrap()
+                .name()
+                .unwrap()
+                .text()
+                .as_str()
+                .into(),
+            span,
+        ),
+    );
+
+    let directives = create_key_value_prop(
+        "directives".into(),
+        create_directives(definition.directives(), span),
+    );
+
+    let mut frag_def = ObjectLit {
+        span,
+        props: vec![kind, name, directives],
+    };
+
+    if definition.type_condition().is_some() {
+        let type_condition = create_key_value_prop(
+            "typeCondition".into(),
+            create_type_condition(definition.type_condition(), span),
+        );
+
+        frag_def.props.push(type_condition);
     }
 
-    if opr_token.subscription_token().is_some() {
-        return opr_token.subscription_token().unwrap().text().into();
+    if definition.selection_set().is_some() {
+        let selection_set = create_key_value_prop(
+            "selectionSet".into(),
+            create_selection_set(definition.selection_set(), span),
+        );
+
+        frag_def.props.push(selection_set);
     }
 
-    "query".into()
+    Box::new(Expr::Object(frag_def))
+}
+
+fn create_definition(definition: Definition, span: Span) -> Option<ExprOrSpread> {
+    let def_expr = match definition {
+        Definition::FragmentDefinition(frag_def) => create_fragment_definition(frag_def, span),
+        Definition::OperationDefinition(operation_def) => {
+            create_operation_definition(operation_def, span)
+        }
+        Definition::DirectiveDefinition(_) => todo!(),
+        Definition::SchemaDefinition(_) => todo!(),
+        Definition::ScalarTypeDefinition(_) => todo!(),
+        Definition::ObjectTypeDefinition(_) => todo!(),
+        Definition::InterfaceTypeDefinition(_) => todo!(),
+        Definition::UnionTypeDefinition(_) => todo!(),
+        Definition::EnumTypeDefinition(_) => todo!(),
+        Definition::InputObjectTypeDefinition(_) => todo!(),
+        Definition::SchemaExtension(_) => todo!(),
+        Definition::ScalarTypeExtension(_) => todo!(),
+        Definition::ObjectTypeExtension(_) => todo!(),
+        Definition::InterfaceTypeExtension(_) => todo!(),
+        Definition::UnionTypeExtension(_) => todo!(),
+        Definition::EnumTypeExtension(_) => todo!(),
+        Definition::InputObjectTypeExtension(_) => todo!(),
+    };
+
+    Some(ExprOrSpread {
+        spread: None,
+        expr: def_expr,
+    })
+}
+
+fn create_definitions(definitions: AstChildren<Definition>, span: Span) -> Expr {
+    let mut all_definitions = vec![];
+    for def in definitions {
+        all_definitions.push(create_definition(def, span));
+    }
+
+    Expr::Array(ArrayLit {
+        span,
+        elems: all_definitions,
+    })
+}
+
+fn create_loc(body: String, span: Span) -> Expr {
+    let start = create_key_value_prop("start".into(), Expr::Lit(Lit::Num(Number::from(0))));
+    let end = create_key_value_prop("end".into(), Expr::Lit(Lit::Num(Number::from(body.len()))));
+    let source_body = create_key_value_prop("body".into(), Expr::Lit(Lit::Str(body.into())));
+    let source_expr = Expr::Object(ObjectLit {
+        span,
+        props: vec![source_body],
+    });
+    let source = create_key_value_prop("source".into(), source_expr);
+
+    Expr::Object(ObjectLit {
+        span,
+        props: vec![start, end, source],
+    })
+}
+
+fn create_document(
+    document: Document,
+    span: Span,
+    body: String,
+    _expressions: Vec<Box<Expr>>,
+    _expr_def_map: &mut HashMap<String, Expr>,
+) -> Expr {
+    let kind = create_key_value_prop("kind".into(), "Document".into());
+    let definitions_expr = create_definitions(document.definitions(), span);
+
+    let mut all_expressions = vec![];
+
+    for _expression in _expressions.clone() {
+        let member_expr_for_definitions = MemberExpr {
+            span,
+            obj: _expression,
+            prop: MemberProp::Ident(Ident::new("definitions".into(), span)),
+        };
+
+        all_expressions.push(ExprOrSpread {
+            spread: None,
+            expr: Box::new(Expr::Member(member_expr_for_definitions)),
+        });
+    }
+
+    let concat_call_expr = Expr::Call(CallExpr {
+        span,
+        callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
+            span,
+            obj: Box::new(definitions_expr.clone()),
+            prop: MemberProp::Ident(Ident::new("concat".into(), span)),
+        }))),
+        args: all_expressions,
+        type_args: None,
+    });
+
+    let definitions = create_key_value_prop(
+        "definitions".into(),
+        if _expressions.len() > 0 {
+            concat_call_expr
+        } else {
+            definitions_expr
+        },
+    );
+
+    let loc = create_key_value_prop("loc".into(), create_loc(body, span));
+
+    let document_object_lit = ObjectLit {
+        span,
+        props: vec![kind, definitions, loc],
+    };
+
+    Expr::Object(document_object_lit)
+}
+
+fn parse_gql_string(
+    body: String,
+    span: Span,
+    expressions: Vec<Box<Expr>>,
+    expr_def_map: &mut HashMap<String, Expr>,
+) -> Expr {
+    let parser = Parser::new(&body);
+    let ast = parser.parse();
+    assert_eq!(0, ast.errors().len());
+
+    let doc = ast.document();
+
+    create_document(doc, span, body, expressions, expr_def_map)
+}
+
+// Visitor
+
+pub struct TransformVisitor {
+    expr_def_map: HashMap<String, Expr>,
+}
+
+impl TransformVisitor {
+    pub fn new() -> Self {
+        Self {
+            expr_def_map: HashMap::new(),
+        }
+    }
+}
+
+impl VisitMut for TransformVisitor {
+    fn visit_mut_expr(&mut self, node: &mut Expr) {
+        if let Some(tag_tpl) = node.as_mut_tagged_tpl() {
+            if let Some(tag) = tag_tpl.tag.as_mut_ident() {
+                if &tag.sym != "gql" {
+                    return;
+                }
+                if tag_tpl.tpl.quasis.len() == 0 {
+                    return;
+                }
+
+                let template = &mut tag_tpl.tpl;
+                let mut data: String = "".into();
+
+                for quasi in &mut template.quasis {
+                    data += &quasi.raw;
+                }
+
+                let gql_raw_string = data.to_string();
+                let no_gql_line_regex = Regex::new(r#"(^\$\{.*\}$)"#).unwrap();
+
+                let gql_text = gql_raw_string
+                    .lines()
+                    .filter(|line| !no_gql_line_regex.is_match(line.trim()))
+                    .map(|line| String::from(line) + "\n")
+                    .collect();
+
+                let expressions = template.exprs.clone();
+                let gql_swc_ast =
+                    parse_gql_string(gql_text, tag_tpl.span, expressions, &mut self.expr_def_map);
+
+                *node = gql_swc_ast;
+            }
+        } else {
+            node.visit_mut_children_with(self)
+        }
+    }
 }

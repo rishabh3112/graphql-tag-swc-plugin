@@ -11,12 +11,11 @@ use apollo_parser::{
     Parser,
 };
 
-use regex::Regex;
 use swc_common::Span;
-use swc_core::ecma::transforms::testing::test;
-
 use swc_ecma_ast::*;
 use swc_ecma_visit::{VisitMut, VisitMutWith};
+
+use regex::Regex;
 
 pub struct TransformVisitor {
     expr_def_map: HashMap<String, Expr>,

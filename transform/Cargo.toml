@@ -6,7 +6,6 @@ edition = "2021"
 
 [dependencies]
 apollo-parser = "0.2.10"
-swc_core = { version = "0.86.*", features = ["ecma_plugin_transform"] }
 swc_common = { version = "0.33.8", features = ["concurrent"] }
 swc_ecma_ast = "0.110.9"
 swc_ecma_utils = "0.124.27"

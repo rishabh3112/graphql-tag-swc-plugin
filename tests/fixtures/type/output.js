@@ -25,6 +25,10 @@ const NAMED_TYPE = {
                             "kind": "Name",
                             "value": "String"
                         }
+                    },
+                    "defaultValue": {
+                        "kind": "StringValue",
+                        "value": "apple"
                     }
                 }
             ],
@@ -47,9 +51,9 @@ const NAMED_TYPE = {
     ],
     "loc": {
         "start": 0,
-        "end": 53,
+        "end": 63,
         "source": {
-            "body": "\n  query testQuery($one: String) {\n    getEntity\n  }\n"
+            "body": '\n  query testQuery($one: String = "apple") {\n    getEntity\n  }\n'
         }
     }
 };

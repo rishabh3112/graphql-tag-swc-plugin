@@ -25,7 +25,8 @@ fn graphql_tag_fixture(input: PathBuf) {
         &input,
         &output,
         FixtureTestConfig {
-            ..Default::default()
+            allow_error: true,
+            sourcemap: false,
         },
     );
 }

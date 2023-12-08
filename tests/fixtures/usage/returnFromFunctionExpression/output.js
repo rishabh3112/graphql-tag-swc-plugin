@@ -1,3 +1,4 @@
+import { gql } from "@apollo/client";
 const getQuery = function() {
     return {
         "kind": "Document",

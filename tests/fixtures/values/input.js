@@ -1,3 +1,5 @@
+import { gql } from "@apollo/client";
+
 const ALL_BASIC_VALUES = gql`
   query testQuery($var: String) {
     getEntity(

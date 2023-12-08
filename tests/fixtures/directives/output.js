@@ -1,3 +1,4 @@
+import { gql } from "@apollo/client";
 // Simple directive
 const SIMPLE_DIRECTIVE = {
     "kind": "Document",

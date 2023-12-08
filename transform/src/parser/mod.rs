@@ -1,11 +1,14 @@
 use std::collections::HashMap;
 
-use apollo_parser::ast::{
-    Argument, Arguments, AstChildren, BooleanValue, DefaultValue, Definition, Directive,
-    Directives, Document, EnumValue, Field, FloatValue, FragmentDefinition, FragmentSpread,
-    InlineFragment, IntValue, ListType, ListValue, NamedType, NonNullType, NullValue, ObjectField,
-    ObjectValue, OperationDefinition, Selection, SelectionSet, StringValue, Type, TypeCondition,
-    Value, Variable, VariableDefinition, VariableDefinitions,
+use apollo_parser::{
+    ast::{
+        Argument, Arguments, AstChildren, BooleanValue, DefaultValue, Definition, Directive,
+        Directives, Document, EnumValue, Field, FloatValue, FragmentDefinition, FragmentSpread,
+        InlineFragment, IntValue, ListType, ListValue, NamedType, NonNullType, NullValue,
+        ObjectField, ObjectValue, OperationDefinition, Selection, SelectionSet, StringValue, Type,
+        TypeCondition, Value, Variable, VariableDefinition, VariableDefinitions,
+    },
+    SyntaxTree,
 };
 
 use swc_common::Span;
@@ -835,12 +838,14 @@ pub fn parse_graphql_tag(
     span: Span,
     expressions: Vec<Box<Expr>>,
     expr_def_map: &mut HashMap<String, Expr>,
-) -> Expr {
+) -> Result<Expr, SyntaxTree> {
     let parser = apollo_parser::Parser::new(&body);
     let ast = parser.parse();
-    assert_eq!(0, ast.errors().len());
 
-    let doc = ast.document();
-
-    create_document(doc, span, body, expressions, expr_def_map)
+    if ast.errors().len() != 0 {
+        Err(ast)
+    } else {
+        let doc = ast.document();
+        Ok(create_document(doc, span, body, expressions, expr_def_map))
+    }
 }

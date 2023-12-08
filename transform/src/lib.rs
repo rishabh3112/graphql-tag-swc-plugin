@@ -49,14 +49,26 @@ impl VisitMut for TransformVisitor {
                     .collect();
 
                 let expressions = template.exprs.clone();
-                let gql_swc_ast = parser::parse_graphql_tag(
+                let gql_swc_ast_result = parser::parse_graphql_tag(
                     gql_text,
                     tag_tpl.span,
                     expressions,
                     &mut self.expr_def_map,
                 );
 
-                *node = gql_swc_ast;
+                match gql_swc_ast_result {
+                    Ok(swc_ast) => *node = swc_ast,
+                    Err(gql_ast) => {
+                        for error in gql_ast.errors() {
+                            println!(
+                                "GraphQL Error: At index {}, {} got \"{}\" instead",
+                                error.index(),
+                                error.message(),
+                                error.data()
+                            )
+                        }
+                    }
+                }
             }
         } else {
             node.visit_mut_children_with(self)

@@ -12,7 +12,6 @@ pub struct Config {
 
 pub struct TransformVisitor {
     pub active_gql_tag_identifiers: Vec<String>,
-    pub skip_tag: bool,
     pub expr_def_map: HashMap<String, Expr>,
     pub config: Config,
 }

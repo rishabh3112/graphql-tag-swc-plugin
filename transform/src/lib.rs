@@ -13,7 +13,6 @@ impl TransformVisitor {
     pub fn new(config: Config) -> Self {
         Self {
             active_gql_tag_identifiers: vec![],
-            skip_tag: true,
             expr_def_map: HashMap::new(),
             config,
         }
@@ -23,7 +22,6 @@ impl TransformVisitor {
 impl VisitMut for TransformVisitor {
     fn visit_mut_program(&mut self, node: &mut Program) {
         node.visit_mut_children_with(self);
-        self.skip_tag = true;
         self.active_gql_tag_identifiers.clear()
     }
 
@@ -55,9 +53,7 @@ impl VisitMut for TransformVisitor {
 
                 ImportSpecifier::Default(specifier) => {
                     let local_name_string = specifier.local.sym.to_string();
-                    if self.config.gql_tag_identifiers.contains(&local_name_string) {
-                        gql_tag_local_name = Some(local_name_string);
-                    }
+                    gql_tag_local_name = Some(local_name_string);
                     break;
                 }
 
@@ -69,22 +65,23 @@ impl VisitMut for TransformVisitor {
             return;
         }
 
-        self.skip_tag = !self
+        let valid_import_source = self
             .config
             .import_sources
             .contains(&node.src.value.to_string());
 
-        self.active_gql_tag_identifiers
-            .push(gql_tag_local_name.unwrap());
+        if valid_import_source {
+            self.active_gql_tag_identifiers
+                .push(gql_tag_local_name.unwrap());
+        }
     }
 
     fn visit_mut_expr(&mut self, node: &mut Expr) {
         if let Some(tag_tpl) = node.as_mut_tagged_tpl() {
             if let Some(tag) = tag_tpl.tag.as_mut_ident() {
-                if self.skip_tag
-                    || !self
-                        .active_gql_tag_identifiers
-                        .contains(&tag.sym.to_string())
+                if !self
+                    .active_gql_tag_identifiers
+                    .contains(&tag.sym.to_string())
                 {
                     return;
                 }

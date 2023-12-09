@@ -1,7 +1,7 @@
 mod parser;
 pub mod structs;
 
-use structs::{Config, TransformVisitor};
+use structs::{GraphQLTagConfig, TransformVisitor};
 
 use std::collections::HashMap;
 
@@ -10,7 +10,7 @@ use swc_ecma_ast::*;
 use swc_ecma_visit::{VisitMut, VisitMutWith};
 
 impl TransformVisitor {
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: GraphQLTagConfig) -> Self {
         Self {
             active_gql_tag_identifiers: vec![],
             expr_def_map: HashMap::new(),

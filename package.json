@@ -1,6 +1,6 @@
 {
   "name": "graphql-tag-swc-plugin",
-  "version": "0.1.2-0",
+  "version": "0.1.2-1",
   "description": "SWC plugin to expand gql tags at build time",
   "author": "rishabh3112 <rishabh31121999@gmail.com>",
   "license": "ISC",

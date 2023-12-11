@@ -1,3 +1,4 @@
+import { gql } from "@apollo/client";
 const ALL_BASIC_VALUES = {
     "kind": "Document",
     "definitions": [

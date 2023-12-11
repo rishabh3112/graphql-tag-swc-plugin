@@ -1,3 +1,5 @@
+import { gql } from "@apollo/client";
+
 const getQuery = function () {
   return gql`
     query testQuery($a: String!) {

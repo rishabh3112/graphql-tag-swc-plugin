@@ -1,3 +1,5 @@
+import { gql } from "@apollo/client";
+
 const NORMAL_SELECTION = gql`
   query testQuery {
     getEntity {

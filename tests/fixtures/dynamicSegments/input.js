@@ -1,3 +1,5 @@
+import { gql } from "@apollo/client";
+
 const NAME = "LOL";
 
 const DYNAMIC_FRAGMENT = gql`

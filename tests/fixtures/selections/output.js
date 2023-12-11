@@ -1,3 +1,4 @@
+import { gql } from "@apollo/client";
 const NORMAL_SELECTION = {
     "kind": "Document",
     "definitions": [

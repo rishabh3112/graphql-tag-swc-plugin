@@ -1,3 +1,4 @@
+import { gql } from "@apollo/client";
 const MUTATION = {
     "kind": "Document",
     "definitions": [

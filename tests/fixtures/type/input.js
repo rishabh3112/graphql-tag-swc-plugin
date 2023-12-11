@@ -1,3 +1,5 @@
+import { gql } from "@apollo/client";
+
 const NAMED_TYPE = gql`
   query testQuery($one: String = "apple") {
     getEntity

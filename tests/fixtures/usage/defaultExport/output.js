@@ -1,3 +1,4 @@
+import { gql } from "@apollo/client";
 export default {
     "kind": "Document",
     "definitions": [
@@ -107,7 +108,7 @@ export default {
         "start": 0,
         "end": 102,
         "source": {
-          "body": "\n  query testQuery($a: String!) {\n    testQueryName(a: $a) @apple {\n      a\n      b\n      c\n    }\n  }\n"
+            "body": "\n  query testQuery($a: String!) {\n    testQueryName(a: $a) @apple {\n      a\n      b\n      c\n    }\n  }\n"
         }
     }
 };

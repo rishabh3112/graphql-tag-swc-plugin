@@ -1,3 +1,4 @@
+import { gql } from "@apollo/client";
 const NAMED_TYPE = {
     "kind": "Document",
     "definitions": [

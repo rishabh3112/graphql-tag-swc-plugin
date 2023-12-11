@@ -1,4 +1,4 @@
-mod parser;
+pub mod parser;
 pub mod structs;
 
 use structs::{GraphQLTagConfig, TransformVisitor};

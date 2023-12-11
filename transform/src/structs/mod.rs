@@ -1,4 +1,7 @@
+// built-ins
 use std::collections::HashMap;
+
+// libs
 use swc_ecma_ast::Expr;
 
 pub struct GraphQLTagConfig {

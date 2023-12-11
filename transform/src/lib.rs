@@ -1,13 +1,16 @@
-mod parser;
-pub mod structs;
-
-use structs::{GraphQLTagConfig, TransformVisitor};
-
+// built-ins
 use std::collections::HashMap;
 
+// libs
 use regex::Regex;
 use swc_ecma_ast::*;
 use swc_ecma_visit::{VisitMut, VisitMutWith};
+// modules
+pub mod parser;
+pub mod structs;
+
+// structs
+use structs::{GraphQLTagConfig, TransformVisitor};
 
 impl TransformVisitor {
     pub fn new(config: GraphQLTagConfig) -> Self {

@@ -1,10 +1,11 @@
-use graphql_tag::structs::{GraphQLTagConfig, TransformVisitor};
-
+// libs
+use serde::Deserialize;
 use swc_core::plugin::{plugin_transform, proxies::TransformPluginProgramMetadata};
 use swc_ecma_ast::Program;
 use swc_ecma_visit::{as_folder, FoldWith};
 
-use serde::Deserialize;
+// structs
+use graphql_tag::structs::{GraphQLTagConfig, TransformVisitor};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]

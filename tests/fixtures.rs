@@ -1,11 +1,14 @@
+// built-ins
 use std::path::PathBuf;
 
-use graphql_tag::structs::{GraphQLTagConfig, TransformVisitor};
+// libs
 use swc_core::ecma::transforms::testing::{test_fixture, FixtureTestConfig};
 use swc_ecma_parser::{EsConfig, Syntax};
 use swc_ecma_visit::as_folder;
-
 use testing::fixture;
+
+// structs
+use graphql_tag::structs::{GraphQLTagConfig, TransformVisitor};
 
 fn syntax() -> Syntax {
     Syntax::Es(EsConfig {

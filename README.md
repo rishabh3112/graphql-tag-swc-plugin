@@ -84,7 +84,7 @@ Here is list of topics and resources to quickly get you up to contributing!
 ### Architecture
 
 Here is the basic code walkthrough (updated at v0.1.4)
-![code walkthrough](./assets/code_walkthrough.png)
+![code walkthrough](https://github.com/rishabh3112/graphql-tag-swc-plugin/raw/master/assets/code_walkthrough.png)
 
 ## Authors
 

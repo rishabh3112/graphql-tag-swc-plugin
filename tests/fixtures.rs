@@ -28,6 +28,7 @@ fn graphql_tag_fixture(input: PathBuf) {
             as_folder(TransformVisitor::new(GraphQLTagConfig {
                 import_sources: vec!["@apollo/client".to_string(), "graphql-tag".into()],
                 gql_tag_identifiers: vec!["gql".to_string()],
+                strip: true,
             }))
         },
         &input,

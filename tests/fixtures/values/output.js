@@ -256,9 +256,9 @@ const ALL_BASIC_VALUES = {
     ],
     "loc": {
         "start": 0,
-        "end": 328,
+        "end": 222,
         "source": {
-            "body": '\n  query testQuery($var: String) {\n    getEntity(\n      var: $var\n      string: "Hello"\n      float: 2.2\n      int: 1\n      bool: true\n      nullVal: null\n      enumVal: TestEnumValue\n      objectValue: { a: "a", b: 1, c: { a: 1.1, b: [1, "a"] } }\n      list: ["string", 1.1, 1, true, null, TestEnumValue, { a: "a" }]\n    )\n  }\n'
+            "body": 'query testQuery($var:String){getEntity(var:$var string:"Hello" float:2.2 int:1 bool:true nullVal:null enumVal:TestEnumValue objectValue:{a:"a",b:1,c:{a:1.1,b:[1,"a"]}}list:["string",1.1,1,true,null,TestEnumValue,{a:"a"}])}'
         }
     }
 };

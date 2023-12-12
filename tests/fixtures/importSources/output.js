@@ -38,9 +38,9 @@ const POSITIVE_CASE_1 = {
     ],
     "loc": {
         "start": 0,
-        "end": 39,
+        "end": 26,
         "source": {
-            "body": "\n  query testQuery {\n    getEntity\n  }\n"
+            "body": "query testQuery{getEntity}"
         }
     }
 };
@@ -75,9 +75,9 @@ const POSITIVE_CASE_2 = {
     ],
     "loc": {
         "start": 0,
-        "end": 39,
+        "end": 26,
         "source": {
-            "body": "\n  query testQuery {\n    getEntity\n  }\n"
+            "body": "query testQuery{getEntity}"
         }
     }
 };

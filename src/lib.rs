@@ -12,6 +12,7 @@ use graphql_tag::structs::{GraphQLTagConfig, TransformVisitor};
 pub struct Config {
     pub import_sources: Option<Vec<String>>,
     pub gql_tag_identifiers: Option<Vec<String>>,
+    pub strip: Option<bool>,
 }
 
 #[plugin_transform]
@@ -19,6 +20,7 @@ pub fn process_transform(program: Program, data: TransformPluginProgramMetadata)
     let default_config = GraphQLTagConfig {
         import_sources: vec!["@apollo/client".to_string(), "graphql-tag".into()],
         gql_tag_identifiers: vec!["gql".to_string()],
+        strip: false,
     };
 
     let config = match data.get_transform_plugin_config() {
@@ -32,6 +34,7 @@ pub fn process_transform(program: Program, data: TransformPluginProgramMetadata)
                     gql_tag_identifiers: config
                         .gql_tag_identifiers
                         .unwrap_or(default_config.gql_tag_identifiers),
+                    strip: config.strip.unwrap_or(false),
                 },
                 Err(_) => {
                     println!("Got invalid config for graphql-tag-swc-plugin, using default config instead");

@@ -63,9 +63,9 @@ const MUTATION = {
     ],
     "loc": {
         "start": 0,
-        "end": 82,
+        "end": 67,
         "source": {
-            "body": "\n  mutation testMutation($entity: String) {\n    updateEntity(entity: $entity)\n  }\n"
+            "body": "mutation testMutation($entity:String){updateEntity(entity:$entity)}"
         }
     }
 };

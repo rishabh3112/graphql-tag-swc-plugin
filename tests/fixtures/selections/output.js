@@ -52,9 +52,9 @@ const NORMAL_SELECTION = {
     ],
     "loc": {
         "start": 0,
-        "end": 67,
+        "end": 35,
         "source": {
-            "body": "\n  query testQuery {\n    getEntity {\n      id\n      name\n    }\n  }\n"
+            "body": "query testQuery{getEntity{id name}}"
         }
     }
 };
@@ -170,9 +170,9 @@ const INLINE_FRAGMENT_SELECTION = {
     ],
     "loc": {
         "start": 0,
-        "end": 176,
+        "end": 84,
         "source": {
-            "body": "\n  query testQuery {\n    getEntity {\n      id\n      ... on User {\n        name\n        address\n      }\n      ... on Baby {\n        name\n        parentAddress\n      }\n    }\n  }\n"
+            "body": "query testQuery{getEntity{id...on User{name address}...on Baby{name parentAddress}}}"
         }
     }
 };
@@ -229,9 +229,9 @@ const USER_FRAGMENT = {
     ],
     "loc": {
         "start": 0,
-        "end": 67,
+        "end": 46,
         "source": {
-            "body": "\n  fragment UserFragment on User {\n    id\n    name\n    address\n  }\n"
+            "body": "fragment UserFragment on User{id name address}"
         }
     }
 };
@@ -288,9 +288,9 @@ const BABY_FRAGMENT = {
     ],
     "loc": {
         "start": 0,
-        "end": 73,
+        "end": 52,
         "source": {
-            "body": "\n  fragment BabyFragment on Baby {\n    id\n    name\n    parentAddress\n  }\n"
+            "body": "fragment BabyFragment on Baby{id name parentAddress}"
         }
     }
 };
@@ -345,9 +345,9 @@ const FRAGMENT_SPREAD_SELECTION = {
     ],
     "loc": {
         "start": 0,
-        "end": 91,
+        "end": 58,
         "source": {
-            "body": "\n  query testQuery {\n    getEntity {\n      ...UserFragment\n      ...BabyFragment\n    }\n  }\n"
+            "body": "query testQuery{getEntity{...UserFragment...BabyFragment}}"
         }
     }
 };

@@ -76,9 +76,9 @@ const STATIC_QUERY = {
     ].concat(DYNAMIC_FRAGMENT.definitions),
     "loc": {
         "start": 0,
-        "end": 90,
+        "end": 42,
         "source": {
-            "body": "\n  query testQuery {\n    getEntity {\n      ... on LOL {\n        lol\n      }\n    }\n  }\n\n  \n"
+            "body": "query testQuery{getEntity{...on LOL{lol}}}"
         }
     }
 };

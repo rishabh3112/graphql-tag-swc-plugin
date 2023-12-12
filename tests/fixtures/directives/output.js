@@ -52,9 +52,9 @@ const SIMPLE_DIRECTIVE = {
     ],
     "loc": {
         "start": 0,
-        "end": 67,
+        "end": 40,
         "source": {
-            "body": "\n  query testQuery {\n    getEntity {\n      id @directive\n    }\n  }\n"
+            "body": "query testQuery{getEntity{id@directive}}"
         }
     }
 };
@@ -133,9 +133,9 @@ const ARGUMENTS_DIRECTIVE = {
     ],
     "loc": {
         "start": 0,
-        "end": 93,
+        "end": 59,
         "source": {
-            "body": '\n  query testQuery {\n    getEntity {\n      id\n      name @directive(arg: "argVal")\n    }\n  }\n'
+            "body": 'query testQuery{getEntity{id name@directive(arg:"argVal")}}'
         }
     }
 };
@@ -237,9 +237,9 @@ const DIRECTIVES_SELECTION_SET = {
     ],
     "loc": {
         "start": 0,
-        "end": 127,
+        "end": 68,
         "source": {
-            "body": '\n  query testQuery {\n    getEntity {\n      id\n      user @directive(arg: "argVal") {\n        id\n        name\n      }\n    }\n  }\n'
+            "body": 'query testQuery{getEntity{id user@directive(arg:"argVal"){id name}}}'
         }
     }
 };

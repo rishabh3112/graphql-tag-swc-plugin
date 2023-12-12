@@ -1,4 +1,5 @@
-use apollo_parser::ast::OperationType;
+use apollo_parser::{ast::OperationType, Lexer, TokenKind};
+
 use swc_ecma_ast::*;
 
 pub fn get_key_value_node(key: String, value: Expr) -> PropOrSpread {
@@ -24,4 +25,53 @@ pub fn get_operation_token(operation_type: Option<OperationType>) -> String {
     }
 
     "query".into()
+}
+
+fn is_punctuator_token_kind(kind: TokenKind) -> bool {
+    match kind {
+        TokenKind::Bang
+        | TokenKind::Dollar
+        | TokenKind::Amp
+        | TokenKind::Spread
+        | TokenKind::Comma
+        | TokenKind::Colon
+        | TokenKind::Eq
+        | TokenKind::At
+        | TokenKind::LParen
+        | TokenKind::RParen
+        | TokenKind::LBracket
+        | TokenKind::RBracket
+        | TokenKind::LCurly
+        | TokenKind::RCurly
+        | TokenKind::Pipe
+        | TokenKind::Eof => true,
+        _ => false,
+    }
+}
+
+pub fn strip_ignored_characters(source: String) -> String {
+    let lexer = Lexer::new(source.as_str());
+
+    let mut stripped_body = String::new();
+    let mut was_last_added_token_non_punctuator = false;
+
+    for token in lexer.tokens() {
+        let kind = token.kind();
+        match kind {
+            TokenKind::Whitespace | TokenKind::Comment | TokenKind::Eof => continue,
+            _ if !is_punctuator_token_kind(kind) => {
+                if was_last_added_token_non_punctuator && kind != TokenKind::Spread {
+                    stripped_body += " ";
+                }
+                stripped_body += token.data();
+                was_last_added_token_non_punctuator = true;
+            }
+            _ => {
+                stripped_body += token.data();
+                was_last_added_token_non_punctuator = false;
+            }
+        }
+    }
+
+    stripped_body
 }

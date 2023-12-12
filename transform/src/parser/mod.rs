@@ -8,7 +8,7 @@ use swc_ecma_ast::*;
 
 // modules
 mod nodes;
-mod utils;
+pub mod utils;
 
 // helpers
 use nodes::document::create_document;

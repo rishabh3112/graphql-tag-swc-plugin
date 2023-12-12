@@ -2,12 +2,15 @@
 use std::collections::HashMap;
 
 // libs
-use regex::Regex;
 use swc_ecma_ast::*;
 use swc_ecma_visit::{VisitMut, VisitMutWith};
+
 // modules
 pub mod parser;
 pub mod structs;
+
+// helpers
+use parser::utils::strip_ignored_characters;
 
 // structs
 use structs::{GraphQLTagConfig, TransformVisitor};
@@ -95,7 +98,6 @@ impl VisitMut for TransformVisitor {
 
                 let template = &mut tag_tpl.tpl;
                 let expressions = template.exprs.clone();
-                let no_gql_line_regex = Regex::new(r#"(^\$\{.*\}$)"#).unwrap();
 
                 let mut data: String = "".into();
                 for quasi in &mut template.quasis {
@@ -104,11 +106,11 @@ impl VisitMut for TransformVisitor {
 
                 let gql_raw_string = data.to_string();
 
-                let gql_text = gql_raw_string
-                    .lines()
-                    .filter(|line| !no_gql_line_regex.is_match(line.trim()))
-                    .map(|line| String::from(line) + "\n")
-                    .collect();
+                let gql_text = if self.config.strip {
+                    strip_ignored_characters(gql_raw_string)
+                } else {
+                    gql_raw_string
+                };
 
                 let gql_swc_ast_result = parser::parse_graphql_tag(
                     gql_text,

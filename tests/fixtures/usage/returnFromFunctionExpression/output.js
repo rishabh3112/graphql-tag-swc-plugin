@@ -107,9 +107,9 @@ const getQuery = function() {
         ],
         "loc": {
             "start": 0,
-            "end": 119,
+            "end": 118,
             "source": {
-                "body": "\n    query testQuery($a: String!) {\n      testQueryName(a: $a) @apple {\n        a\n        b\n        c\n      }\n    }\n  \n"
+                "body": "\n    query testQuery($a: String!) {\n      testQueryName(a: $a) @apple {\n        a\n        b\n        c\n      }\n    }\n  "
             }
         }
     };

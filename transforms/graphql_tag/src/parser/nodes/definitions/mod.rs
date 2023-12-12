@@ -1,5 +1,5 @@
 // libs
-use apollo_parser::ast::{AstChildren, Definition};
+use apollo_parser::cst::{CstChildren, Definition};
 use swc_common::Span;
 use swc_ecma_ast::*;
 
@@ -40,7 +40,7 @@ pub fn create_definition(definition: Definition, span: Span) -> Option<ExprOrSpr
     })
 }
 
-pub fn create_definitions(definitions: AstChildren<Definition>, span: Span) -> Expr {
+pub fn create_definitions(definitions: CstChildren<Definition>, span: Span) -> Expr {
     let mut all_definitions = vec![];
     for def in definitions {
         all_definitions.push(create_definition(def, span));

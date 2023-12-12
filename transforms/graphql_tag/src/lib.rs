@@ -132,7 +132,21 @@ where
                 let gql_raw_string = data.to_string();
 
                 let gql_text = if self.config.strip {
-                    strip_ignored_characters(gql_raw_string)
+                    let strip_result = strip_ignored_characters(gql_raw_string.clone());
+                    match strip_result {
+                        Ok(gql_strip_text) => gql_strip_text,
+                        Err(errors) => {
+                            for error in errors {
+                                println!(
+                                    "GraphQL Error: At index {}, {} got \"{}\" instead\n",
+                                    error.index(),
+                                    error.message(),
+                                    error.data()
+                                )
+                            }
+                            gql_raw_string
+                        }
+                    }
                 } else {
                     gql_raw_string
                 };

@@ -1,5 +1,5 @@
 // libs
-use apollo_parser::ast::{ListType, NamedType, NonNullType, Type, TypeCondition};
+use apollo_parser::cst::{ListType, NamedType, NonNullType, Type, TypeCondition};
 use swc_common::Span;
 use swc_ecma_ast::*;
 

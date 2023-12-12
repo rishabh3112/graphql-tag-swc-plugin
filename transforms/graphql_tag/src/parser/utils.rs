@@ -1,4 +1,4 @@
-use apollo_parser::{ast::OperationType, Lexer, TokenKind};
+use apollo_parser::{cst::OperationType, Error, Lexer, TokenKind};
 
 use swc_ecma_ast::*;
 
@@ -49,13 +49,18 @@ fn is_punctuator_token_kind(kind: TokenKind) -> bool {
     }
 }
 
-pub fn strip_ignored_characters(source: String) -> String {
+pub fn strip_ignored_characters(source: String) -> Result<String, Vec<Error>> {
     let lexer = Lexer::new(source.as_str());
 
     let mut stripped_body = String::new();
     let mut was_last_added_token_non_punctuator = false;
+    let (tokens, errors) = lexer.lex();
 
-    for token in lexer.tokens() {
+    if errors.len() != 0 {
+        return Err(errors);
+    }
+
+    for token in tokens {
         let kind = token.kind();
         match kind {
             TokenKind::Whitespace | TokenKind::Comment | TokenKind::Eof => continue,
@@ -73,5 +78,5 @@ pub fn strip_ignored_characters(source: String) -> String {
         }
     }
 
-    stripped_body
+    Ok(stripped_body)
 }

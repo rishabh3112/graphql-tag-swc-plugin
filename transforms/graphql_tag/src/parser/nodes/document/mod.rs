@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 
 // libs
-use apollo_parser::ast::Document;
+use apollo_parser::cst::Document;
 use swc_common::{comments::Comments, BytePos, Span};
 use swc_ecma_ast::*;
 

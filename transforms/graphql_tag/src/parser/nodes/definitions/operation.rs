@@ -1,5 +1,5 @@
 // libs
-use apollo_parser::ast::OperationDefinition;
+use apollo_parser::cst::OperationDefinition;
 use swc_common::Span;
 use swc_ecma_ast::*;
 

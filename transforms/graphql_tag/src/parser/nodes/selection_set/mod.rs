@@ -1,5 +1,5 @@
 // libs
-use apollo_parser::ast::{AstChildren, Selection, SelectionSet};
+use apollo_parser::cst::{CstChildren, Selection, SelectionSet};
 use swc_common::Span;
 use swc_ecma_ast::*;
 
@@ -32,7 +32,7 @@ pub fn create_selection_set(selection_set: Option<SelectionSet>, span: Span) -> 
     Expr::Object(sel_set)
 }
 
-fn create_selections(selections: AstChildren<Selection>, span: Span) -> Expr {
+fn create_selections(selections: CstChildren<Selection>, span: Span) -> Expr {
     let mut all_selections = vec![];
     for selection in selections {
         all_selections.push(create_selection(selection, span));

@@ -1,5 +1,5 @@
 // libs
-use apollo_parser::ast::{Argument, Arguments};
+use apollo_parser::cst::{Argument, Arguments};
 use swc_common::Span;
 use swc_ecma_ast::*;
 

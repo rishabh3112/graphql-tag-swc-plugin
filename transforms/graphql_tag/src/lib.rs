@@ -1,6 +1,7 @@
 // built-ins
 use std::collections::HashMap;
 
+use miette::NamedSource;
 // libs
 use swc_common::comments::Comments;
 use swc_ecma_ast::*;
@@ -15,7 +16,7 @@ mod utils;
 use parser::utils::strip_ignored_characters;
 
 // structs
-use structs::{GraphQLTagConfig, TransformVisitor};
+use structs::{GraphQLTagConfig, PrettyError, TransformVisitor};
 use utils::add_unique_fn_to_program;
 
 impl<C> TransformVisitor<C>
@@ -129,7 +130,7 @@ where
 
                 let unique_fn_name = self.config.unique_fn_name.clone();
                 let gql_swc_ast_result = parser::parse_graphql_tag(
-                    gql_text,
+                    gql_text.clone(),
                     tag_tpl.span,
                     expressions,
                     &mut self.expr_def_map,
@@ -142,12 +143,15 @@ where
                     Ok(swc_ast) => *node = swc_ast,
                     Err(gql_ast) => {
                         for error in gql_ast.errors() {
-                            println!(
-                                "GraphQL Error: At index {}, {} got \"{}\" instead\n",
-                                error.index(),
-                                error.message(),
-                                error.data()
-                            )
+                            let miette_error = miette::Report::new(PrettyError {
+                                ty: format!("{}, got {} instead", error.message(), error.data()),
+                                src: NamedSource::new(
+                                    self.config.file_path.clone(),
+                                    gql_text.clone(),
+                                ),
+                                span: (error.index(), error.data().len()).into(),
+                            });
+                            println!("{:?}", miette_error);
                         }
                     }
                 }

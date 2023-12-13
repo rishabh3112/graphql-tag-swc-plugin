@@ -35,6 +35,7 @@ fn graphql_tag_fixture(input: PathBuf) {
                     strip: false,
                     unique_fn_name: "unique".into(),
                     unique_fn_used: false,
+                    file_path: input.to_str().unwrap().into(),
                 },
                 _tr.comments.clone(),
             ))
@@ -58,6 +59,7 @@ fn graphql_tag_fixture(input: PathBuf) {
                     strip: true,
                     unique_fn_name: "unique".into(),
                     unique_fn_used: false,
+                    file_path: input.to_str().unwrap().into(),
                 },
                 _tr.comments.clone(),
             ))

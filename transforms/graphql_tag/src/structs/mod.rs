@@ -3,12 +3,15 @@ use std::collections::HashMap;
 
 use swc_common::comments::Comments;
 // libs
+use miette::{Diagnostic, NamedSource, SourceSpan};
 use swc_ecma_ast::Expr;
+use thiserror::Error;
 
 pub struct GraphQLTagConfig {
     pub import_sources: Vec<String>,
     pub gql_tag_identifiers: Vec<String>,
     pub strip: bool,
+    pub file_path: String,
     pub unique_fn_name: String,
     pub unique_fn_used: bool,
 }
@@ -22,4 +25,15 @@ where
     pub config: GraphQLTagConfig,
     pub comments: C,
     pub unique_fn_used: bool,
+}
+
+#[derive(Error, Debug, Diagnostic)]
+#[error("{}", self.ty)]
+#[diagnostic(code("GraphQL Error"))]
+pub struct PrettyError {
+    pub ty: String,
+    #[source_code]
+    pub src: NamedSource,
+    #[label("{}", self.ty)]
+    pub span: SourceSpan,
 }

@@ -27,6 +27,8 @@ impl TransformVisitor {
 
 impl VisitMut for TransformVisitor {
     fn visit_mut_program(&mut self, node: &mut Program) {
+        // TODO: use unique_fn_name for creating unique function
+        println!("{}", self.config.unique_fn_name);
         node.visit_mut_children_with(self);
         self.active_gql_tag_identifiers.clear()
     }

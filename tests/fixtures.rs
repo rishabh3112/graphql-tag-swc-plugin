@@ -29,6 +29,7 @@ fn graphql_tag_fixture(input: PathBuf) {
                 import_sources: vec!["@apollo/client".to_string(), "graphql-tag".into()],
                 gql_tag_identifiers: vec!["gql".to_string()],
                 strip: true,
+                unique_fn_name: "unique".into(),
             }))
         },
         &input,

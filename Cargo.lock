@@ -1817,14 +1817,7 @@ checksum = "3ed742d4ea2bd1176e236172c8429aaf54486e7ac098db29ffe6529e0ce50973"
 name = "unique_identifier"
 version = "0.1.0"
 dependencies = [
- "apollo-parser",
- "regex",
- "serde",
- "serde_json",
- "swc_common",
- "swc_core",
  "swc_ecma_ast",
- "swc_ecma_parser",
  "swc_ecma_visit",
 ]
 

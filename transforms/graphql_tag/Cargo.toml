@@ -1,6 +1,6 @@
 [package]
 authors = ["Rishabh Chawla <rishabh31121999@gmail.com>"]
-name = "graphql-tag"
+name = "graphql_tag"
 version = "0.1.0"
 edition = "2021"
 

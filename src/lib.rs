@@ -4,42 +4,19 @@ use swc_core::plugin::{
     plugin_transform,
     proxies::{PluginCommentsProxy, TransformPluginProgramMetadata},
 };
-use swc_ecma_ast::{Ident, Program};
-use swc_ecma_visit::{as_folder, FoldWith, VisitMut};
+use swc_ecma_ast::Program;
+use swc_ecma_visit::{as_folder, FoldWith};
 
 // structs
 use graphql_tag::structs::{GraphQLTagConfig, TransformVisitor};
+use unique_identifier::UniqueIdentifierVisitor;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
-    pub import_sources: Option<Vec<String>>,
-    pub gql_tag_identifiers: Option<Vec<String>>,
-    pub strip: Option<bool>,
-}
-
-// TODO: move this to transform folder or create it's own folder
-// So that we can test this
-struct UniqueIdentifierVisitor {
-    identifier: String,
-    count: i64,
-}
-
-impl UniqueIdentifierVisitor {
-    pub fn new() -> Self {
-        Self {
-            identifier: "unique".into(),
-            count: 0,
-        }
-    }
-}
-
-impl VisitMut for UniqueIdentifierVisitor {
-    fn visit_mut_ident(&mut self, node: &mut Ident) {
-        if node.sym.as_str() == self.identifier {
-            self.count = self.count + 1;
-        }
-    }
+    import_sources: Option<Vec<String>>,
+    gql_tag_identifiers: Option<Vec<String>>,
+    strip: Option<bool>,
 }
 
 #[plugin_transform]

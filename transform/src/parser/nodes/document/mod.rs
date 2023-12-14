@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 // libs
 use apollo_parser::ast::Document;
-use swc_common::Span;
+use swc_common::{comments::Comments, BytePos, Span};
 use swc_ecma_ast::*;
 
 // helpers
@@ -25,12 +25,15 @@ fn create_loc(body: String, span: Span) -> Expr {
     })
 }
 
-pub fn create_document(
+pub fn create_document<C: Comments>(
     document: Document,
     span: Span,
     body: String,
     expressions: Vec<Box<Expr>>,
     _expr_def_map: &mut HashMap<String, Expr>,
+    unique_fn_name: String,
+    unique_fn_used: &mut bool,
+    comments: &mut C,
 ) -> Expr {
     let kind = get_key_value_node("kind".into(), "Document".into());
     let definitions_expr = create_definitions(document.definitions(), span);
@@ -50,8 +53,8 @@ pub fn create_document(
         });
     }
 
-    let concat_call_expr = Expr::Call(CallExpr {
-        span,
+    let concat_definitions_expr = Expr::Call(CallExpr {
+        span: Span::with_lo(&span, span.lo() + BytePos(2)),
         callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
             span,
             obj: Box::new(definitions_expr.clone()),
@@ -61,10 +64,37 @@ pub fn create_document(
         type_args: None,
     });
 
+    let unique_fn_call_expr = Expr::Call(CallExpr {
+        span: Span::with_lo(&span, span.lo() + BytePos(1)),
+        callee: Callee::Expr(Box::new(Expr::Ident(Ident::new(
+            unique_fn_name.clone().into(),
+            span,
+        )))),
+        args: vec![ExprOrSpread {
+            spread: None,
+            expr: Box::new(concat_definitions_expr.clone()),
+        }],
+        type_args: None,
+    });
+
     let definitions = get_key_value_node(
         "definitions".into(),
         if expressions.len() > 0 {
-            concat_call_expr
+            let mut unique_call_pos = unique_fn_call_expr.as_call().unwrap().span.lo();
+            if unique_call_pos.is_dummy() {
+                unique_call_pos = Span::dummy_with_cmt().lo;
+            }
+
+            let mut concat_call_pos = concat_definitions_expr.as_call().unwrap().span.lo();
+            if concat_call_pos.is_dummy() {
+                concat_call_pos = Span::dummy_with_cmt().lo;
+            }
+
+            comments.add_pure_comment(concat_call_pos);
+            comments.add_pure_comment(unique_call_pos);
+
+            *unique_fn_used = true;
+            unique_fn_call_expr
         } else {
             definitions_expr
         },

@@ -2,7 +2,9 @@
 use std::collections::HashMap;
 
 // libs
+use swc_common::{comments::Comments, BytePos, SourceFile};
 use swc_ecma_ast::*;
+use swc_ecma_parser::parse_file_as_expr;
 use swc_ecma_visit::{VisitMut, VisitMutWith};
 
 // modules
@@ -15,22 +17,101 @@ use parser::utils::strip_ignored_characters;
 // structs
 use structs::{GraphQLTagConfig, TransformVisitor};
 
-impl TransformVisitor {
-    pub fn new(config: GraphQLTagConfig) -> Self {
+impl<C> TransformVisitor<C>
+where
+    C: Comments,
+{
+    pub fn new(config: GraphQLTagConfig, comments: C) -> Self {
         Self {
+            unique_fn_used: false,
             active_gql_tag_identifiers: vec![],
             expr_def_map: HashMap::new(),
             config,
+            comments,
         }
     }
 }
 
-impl VisitMut for TransformVisitor {
+impl<C> VisitMut for TransformVisitor<C>
+where
+    C: Comments,
+{
     fn visit_mut_program(&mut self, node: &mut Program) {
-        // TODO: use unique_fn_name for creating unique function
-        println!("{}", self.config.unique_fn_name);
         node.visit_mut_children_with(self);
-        self.active_gql_tag_identifiers.clear()
+        self.active_gql_tag_identifiers.clear();
+
+        if self.unique_fn_used {
+            let source: String = "(definitions) => {
+            const names = {};
+            return definitions.filter(definition => {
+              if (definition.kind !== 'FragmentDefinition') {
+                return true;
+              }
+              const name = definition.name.value;
+              if (names[name]) {
+                return false;
+              } else {
+                names[name] = true;
+                return true;
+              }
+            });
+          }"
+            .into();
+
+            let source_file = SourceFile::new(
+                swc_common::FileName::Anon,
+                false,
+                swc_common::FileName::Anon,
+                source,
+                BytePos(1),
+            );
+
+            let expr_result = parse_file_as_expr(
+                &source_file,
+                Default::default(),
+                Default::default(),
+                Default::default(),
+                &mut vec![],
+            )
+            .expect("failed to create unique function");
+
+            match node {
+                Program::Module(program) => program.body.insert(
+                    1,
+                    ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
+                        span: program.span,
+                        kind: VarDeclKind::Const,
+                        declare: false,
+                        decls: vec![VarDeclarator {
+                            span: program.span,
+                            name: Pat::Ident(
+                                Ident::new(self.config.unique_fn_name.clone().into(), program.span)
+                                    .into(),
+                            ),
+                            init: Some(expr_result),
+                            definite: true,
+                        }],
+                    })))),
+                ),
+                Program::Script(program) => program.body.insert(
+                    1,
+                    Stmt::Decl(Decl::Var(Box::new(VarDecl {
+                        span: program.span,
+                        kind: VarDeclKind::Const,
+                        declare: false,
+                        decls: vec![VarDeclarator {
+                            span: program.span,
+                            name: Pat::Ident(
+                                Ident::new(self.config.unique_fn_name.clone().into(), program.span)
+                                    .into(),
+                            ),
+                            init: Some(expr_result),
+                            definite: true,
+                        }],
+                    }))),
+                ),
+            }
+        }
     }
 
     fn visit_mut_import_decl(&mut self, node: &mut ImportDecl) {
@@ -114,11 +195,15 @@ impl VisitMut for TransformVisitor {
                     gql_raw_string
                 };
 
+                let unique_fn_name = self.config.unique_fn_name.clone();
                 let gql_swc_ast_result = parser::parse_graphql_tag(
                     gql_text,
                     tag_tpl.span,
                     expressions,
                     &mut self.expr_def_map,
+                    unique_fn_name,
+                    &mut self.unique_fn_used,
+                    &mut self.comments,
                 );
 
                 match gql_swc_ast_result {

@@ -32,7 +32,7 @@ fn graphql_tag_fixture(input: PathBuf) {
                 GraphQLTagConfig {
                     import_sources: vec!["@apollo/client".to_string(), "graphql-tag".into()],
                     gql_tag_identifiers: vec!["gql".to_string()],
-                    strip: true,
+                    strip: false,
                     unique_fn_name: "unique".into(),
                     unique_fn_used: false,
                 },

@@ -52,9 +52,9 @@ const NAMED_TYPE = {
     ],
     "loc": {
         "start": 0,
-        "end": 47,
+        "end": 63,
         "source": {
-            "body": 'query testQuery($one:String="apple"){getEntity}'
+            "body": '\n  query testQuery($one: String = "apple") {\n    getEntity\n  }\n'
         }
     }
 };
@@ -110,9 +110,9 @@ const NAMED_TYPE_NOT_NULL = {
     ],
     "loc": {
         "start": 0,
-        "end": 40,
+        "end": 54,
         "source": {
-            "body": "query testQuery($one:String!){getEntity}"
+            "body": "\n  query testQuery($one: String!) {\n    getEntity\n  }\n"
         }
     }
 };
@@ -168,9 +168,9 @@ const LIST_TYPE = {
     ],
     "loc": {
         "start": 0,
-        "end": 41,
+        "end": 55,
         "source": {
-            "body": "query testQuery($one:[String]){getEntity}"
+            "body": "\n  query testQuery($one: [String]) {\n    getEntity\n  }\n"
         }
     }
 };
@@ -229,9 +229,9 @@ const LIST_TYPE_NOT_NULL = {
     ],
     "loc": {
         "start": 0,
-        "end": 42,
+        "end": 56,
         "source": {
-            "body": "query testQuery($one:[String!]){getEntity}"
+            "body": "\n  query testQuery($one: [String!]) {\n    getEntity\n  }\n"
         }
     }
 };

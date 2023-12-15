@@ -52,9 +52,9 @@ const QUERY = {
     ],
     "loc": {
         "start": 0,
-        "end": 35,
+        "end": 67,
         "source": {
-            "body": "query testQuery{getEntity{id name}}"
+            "body": "\n  query testQuery {\n    getEntity {\n      id\n      name\n    }\n  }\n"
         }
     }
 };

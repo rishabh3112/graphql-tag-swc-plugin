@@ -43,9 +43,9 @@ const FRAGMENT = {
     ],
     "loc": {
         "start": 0,
-        "end": 40,
+        "end": 57,
         "source": {
-            "body": "fragment TestFragment on Entity{id name}"
+            "body": "\n  fragment TestFragment on Entity {\n    id\n    name\n  }\n"
         }
     }
 };

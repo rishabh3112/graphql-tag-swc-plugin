@@ -25,11 +25,16 @@ fn graphql_tag_fixture(input: PathBuf) {
     test_fixture(
         syntax(),
         &|_tr| {
-            as_folder(TransformVisitor::new(GraphQLTagConfig {
-                import_sources: vec!["@apollo/client".to_string(), "graphql-tag".into()],
-                gql_tag_identifiers: vec!["gql".to_string()],
-                strip: true,
-            }))
+            as_folder(TransformVisitor::new(
+                GraphQLTagConfig {
+                    import_sources: vec!["@apollo/client".to_string(), "graphql-tag".into()],
+                    gql_tag_identifiers: vec!["gql".to_string()],
+                    strip: true,
+                    unique_fn_name: "unique".into(),
+                    unique_fn_used: false,
+                },
+                _tr.comments.clone(),
+            ))
         },
         &input,
         &output,

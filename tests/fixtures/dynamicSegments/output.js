@@ -1,4 +1,19 @@
 import { gql } from "@apollo/client";
+const unique = (definitions)=>{
+    const names = {};
+    return definitions.filter((definition)=>{
+        if (definition.kind !== 'FragmentDefinition') {
+            return true;
+        }
+        const name = definition.name.value;
+        if (names[name]) {
+            return false;
+        } else {
+            names[name] = true;
+            return true;
+        }
+    });
+};
 const NAME = "LOL";
 const DYNAMIC_FRAGMENT = gql`
   fragment name on ${NAME} {
@@ -18,7 +33,7 @@ const QUERY_WITH_DYNAMIC_SEGMENT = gql`
 `;
 const STATIC_QUERY = {
     "kind": "Document",
-    "definitions": [
+    "definitions": /*#__PURE__*/ unique(/*#__PURE__*/ [
         {
             "kind": "OperationDefinition",
             "name": {
@@ -73,7 +88,7 @@ const STATIC_QUERY = {
                 ]
             }
         }
-    ].concat(DYNAMIC_FRAGMENT.definitions),
+    ].concat(DYNAMIC_FRAGMENT.definitions)),
     "loc": {
         "start": 0,
         "end": 42,

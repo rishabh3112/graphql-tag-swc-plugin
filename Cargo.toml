@@ -11,7 +11,8 @@ crate-type = ["cdylib"]
 swc_core = { version = "0.86.*", features = ["ecma_plugin_transform"] }
 swc_ecma_ast = "0.110.9"
 swc_ecma_visit = "0.96.9"
-graphql-tag = { path = "./transform" }
+graphql_tag = { path = "./transforms/graphql_tag" }
+unique_identifier = { path = "./transforms/unique_identifier" }
 serde = "1.0.193"
 serde_json = "1.0.108"
 

@@ -1,8 +1,8 @@
 // built-ins
 use std::collections::HashMap;
 
-use miette::NamedSource;
 // libs
+use miette::NamedSource;
 use swc_common::comments::Comments;
 use swc_ecma_ast::*;
 use swc_ecma_visit::{VisitMut, VisitMutWith};
@@ -24,6 +24,15 @@ where
     C: Comments,
 {
     pub fn new(config: GraphQLTagConfig, comments: C) -> Self {
+        let _ = miette::set_hook(Box::new(|_| {
+            Box::new(
+                miette::MietteHandlerOpts::new()
+                    .force_graphical(true)
+                    .color(true)
+                    .build(),
+            )
+        }));
+
         Self {
             unique_fn_used: false,
             active_gql_tag_identifiers: vec![],
@@ -151,7 +160,7 @@ where
                                 ),
                                 span: (error.index(), error.data().len()).into(),
                             });
-                            println!("{:?}", miette_error);
+                            println!("\n{:?}", miette_error);
                         }
                     }
                 }

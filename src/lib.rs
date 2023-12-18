@@ -1,6 +1,7 @@
 // libs
 use serde::Deserialize;
 use swc_core::plugin::{
+    metadata::TransformPluginMetadataContextKind,
     plugin_transform,
     proxies::{PluginCommentsProxy, TransformPluginProgramMetadata},
 };
@@ -21,6 +22,11 @@ pub struct Config {
 
 #[plugin_transform]
 pub fn process_transform(program: Program, data: TransformPluginProgramMetadata) -> Program {
+    let mut file_path: String = String::new();
+    if let Some(name) = data.get_context(&TransformPluginMetadataContextKind::Filename) {
+        file_path = name;
+    }
+
     let mut program = program;
     let mut unique_visitor = UniqueIdentifierVisitor::new();
 
@@ -36,6 +42,7 @@ pub fn process_transform(program: Program, data: TransformPluginProgramMetadata)
         import_sources: vec!["@apollo/client".to_string(), "graphql-tag".into()],
         gql_tag_identifiers: vec!["gql".to_string()],
         strip: false,
+        file_path: String::new(),
         unique_fn_name: unique_fn_name.clone(),
         unique_fn_used: false,
     };
@@ -52,6 +59,7 @@ pub fn process_transform(program: Program, data: TransformPluginProgramMetadata)
                         .gql_tag_identifiers
                         .unwrap_or(default_config.gql_tag_identifiers),
                     strip: config.strip.unwrap_or(false),
+                    file_path,
                     unique_fn_name,
                     unique_fn_used: false,
                 },

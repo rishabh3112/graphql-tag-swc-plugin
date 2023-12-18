@@ -399,6 +399,7 @@ name = "graphql_tag"
 version = "0.1.0"
 dependencies = [
  "apollo-parser",
+ "miette 3.3.0",
  "regex",
  "serde",
  "serde_json",
@@ -407,6 +408,7 @@ dependencies = [
  "swc_ecma_ast",
  "swc_ecma_parser",
  "swc_ecma_visit",
+ "thiserror",
 ]
 
 [[package]]
@@ -566,22 +568,52 @@ dependencies = [
 
 [[package]]
 name = "miette"
-version = "4.7.1"
+version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c90329e44f9208b55f45711f9558cec15d7ef8295cc65ecd6d4188ae8edc58c"
+checksum = "cd2adcfcced5d625bf90a958a82ae5b93231f57f3df1383fee28c9b5096d35ed"
 dependencies = [
  "atty",
  "backtrace",
- "miette-derive",
+ "miette-derive 3.3.0",
  "once_cell",
  "owo-colors",
  "supports-color",
  "supports-hyperlinks",
  "supports-unicode",
  "terminal_size",
- "textwrap",
+ "textwrap 0.14.2",
+ "thiserror",
+]
+
+[[package]]
+name = "miette"
+version = "4.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c90329e44f9208b55f45711f9558cec15d7ef8295cc65ecd6d4188ae8edc58c"
+dependencies = [
+ "atty",
+ "backtrace",
+ "miette-derive 4.7.1",
+ "once_cell",
+ "owo-colors",
+ "supports-color",
+ "supports-hyperlinks",
+ "supports-unicode",
+ "terminal_size",
+ "textwrap 0.15.0",
  "thiserror",
  "unicode-width",
+]
+
+[[package]]
+name = "miette-derive"
+version = "3.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c01a8b61312d367ce87956bb686731f87e4c6dd5dbc550e8f06e3c24fb1f67f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.99",
 ]
 
 [[package]]
@@ -1453,7 +1485,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8cf6f875540aa4bb5d0013adf3e89719187c6965dcbacd313fcdb447b01bcd86"
 dependencies = [
  "anyhow",
- "miette",
+ "miette 4.7.1",
  "once_cell",
  "parking_lot",
  "swc_common",
@@ -1642,6 +1674,17 @@ name = "text-size"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f18aa187839b2bdb1ad2fa35ead8c4c2976b64e4363c386d45ac0f7ee85c9233"
+
+[[package]]
+name = "textwrap"
+version = "0.14.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0066c8d12af8b5acd21e00547c3797fde4e8677254a7ee429176ccebbe93dd80"
+dependencies = [
+ "smawk",
+ "unicode-linebreak",
+ "unicode-width",
+]
 
 [[package]]
 name = "textwrap"

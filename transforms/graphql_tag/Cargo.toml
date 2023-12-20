@@ -5,7 +5,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-apollo-parser = "0.7.4"
+apollo-parser = "0.7.5"
 swc_common = { version = "0.33.8", features = ["concurrent"] }
 swc_ecma_ast = "0.110.9"
 swc_ecma_visit = "0.96.9"

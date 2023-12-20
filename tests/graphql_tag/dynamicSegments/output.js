@@ -31,6 +31,15 @@ const QUERY_WITH_DYNAMIC_SEGMENT = gql`
 
   ${DYNAMIC_FRAGMENT}
 `;
+const QUERY_WITH_DYNAMIC_FRAGMENT_SPREAD = gql`
+  query testQuery {
+    getEntity {
+      ...${NAME}
+    }
+  }
+
+  ${DYNAMIC_FRAGMENT}
+`;
 const STATIC_QUERY = {
     "kind": "Document",
     "definitions": /*#__PURE__*/ unique(/*#__PURE__*/ [

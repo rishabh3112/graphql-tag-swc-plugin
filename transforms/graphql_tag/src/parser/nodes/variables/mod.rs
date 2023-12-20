@@ -1,5 +1,5 @@
 // libs
-use apollo_parser::ast::{DefaultValue, Variable, VariableDefinition, VariableDefinitions};
+use apollo_parser::cst::{DefaultValue, Variable, VariableDefinition, VariableDefinitions};
 use swc_common::Span;
 use swc_ecma_ast::*;
 

@@ -1,5 +1,5 @@
 // libs
-use apollo_parser::ast::{Directive, Directives};
+use apollo_parser::cst::{Directive, Directives};
 use swc_common::Span;
 use swc_ecma_ast::*;
 

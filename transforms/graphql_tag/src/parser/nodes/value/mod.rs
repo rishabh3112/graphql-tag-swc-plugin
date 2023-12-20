@@ -1,6 +1,6 @@
 // libs
-use apollo_parser::ast::{
-    AstChildren, BooleanValue, EnumValue, FloatValue, IntValue, ListValue, NullValue, ObjectField,
+use apollo_parser::cst::{
+    BooleanValue, CstChildren, EnumValue, FloatValue, IntValue, ListValue, NullValue, ObjectField,
     ObjectValue, StringValue, Value,
 };
 use regex::Regex;
@@ -32,15 +32,12 @@ pub fn create_value(value: Option<Value>, span: Span) -> Expr {
 fn create_string_value(str: StringValue, span: Span) -> Expr {
     let kind = get_key_value_node("kind".into(), "StringValue".into());
 
-    let mut string_token = str.to_string();
+    let mut string_token: String = str.into();
     let re = Regex::new(r#""(?P<str>[^"]*)""#).unwrap();
     for cap in re.captures_iter(string_token.clone().as_str()) {
         string_token = cap[0].to_string();
     }
-    let value = get_key_value_node(
-        "value".into(),
-        string_token[1..string_token.len() - 1].into(),
-    );
+    let value = get_key_value_node("value".into(), string_token.into());
 
     let str_value = ObjectLit {
         span,
@@ -147,7 +144,7 @@ fn create_object_value(object: ObjectValue, span: Span) -> Expr {
     Expr::Object(object_val)
 }
 
-fn create_object_fields(object_fields: AstChildren<ObjectField>, span: Span) -> Expr {
+fn create_object_fields(object_fields: CstChildren<ObjectField>, span: Span) -> Expr {
     let mut all_fields = vec![];
     for field in object_fields.into_iter() {
         all_fields.push(Some(ExprOrSpread {
@@ -178,7 +175,7 @@ fn create_object_field(field: ObjectField, span: Span) -> Expr {
     Expr::Object(object_field_value)
 }
 
-fn create_list_value_values(values: AstChildren<Value>, span: Span) -> Expr {
+fn create_list_value_values(values: CstChildren<Value>, span: Span) -> Expr {
     let mut all_values = vec![];
     for value in values.into_iter() {
         all_values.push(Some(ExprOrSpread {

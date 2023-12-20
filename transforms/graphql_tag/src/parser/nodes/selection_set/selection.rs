@@ -1,5 +1,5 @@
 // libs
-use apollo_parser::ast::{Field, FragmentSpread, InlineFragment, Selection};
+use apollo_parser::cst::{Field, FragmentSpread, InlineFragment, Selection};
 use swc_common::Span;
 use swc_ecma_ast::*;
 

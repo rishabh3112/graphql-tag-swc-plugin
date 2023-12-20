@@ -1,5 +1,5 @@
 // libs
-use apollo_parser::ast::FragmentDefinition;
+use apollo_parser::cst::FragmentDefinition;
 use swc_common::Span;
 use swc_ecma_ast::*;
 

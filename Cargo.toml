@@ -8,17 +8,17 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-swc_core = { version = "0.86.*", features = ["ecma_plugin_transform"] }
-swc_ecma_ast = "0.110.9"
-swc_ecma_visit = "0.96.9"
+swc_core = { version = "0.90.30", features = ["ecma_plugin_transform"] }
+swc_ecma_ast = "^0.112.6"
+swc_ecma_visit = "^0.98.7"
 graphql_tag = { path = "./transforms/graphql_tag" }
 unique_identifier = { path = "./transforms/unique_identifier" }
 serde = "1.0.193"
 serde_json = "1.0.108"
 
 [dev-dependencies]
-swc_ecma_parser = "0.141.30"
-testing = "0.35.12"
+swc_ecma_parser = "^0.143.10"
+testing = "0.35.24"
 
 # .cargo/config defines few alias to build plugin.
 # cargo build-wasi generates wasm-wasi32 binary

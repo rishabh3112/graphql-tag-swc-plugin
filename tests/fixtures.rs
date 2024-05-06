@@ -11,7 +11,7 @@ use testing::{fixture, NormalizedOutput};
 use graphql_tag::structs::{GraphQLTagConfig, TransformVisitor};
 use unique_identifier::UniqueIdentifierVisitor;
 
-fn syntax() -> Syntax {
+fn get_syntax() -> Syntax {
     Syntax::Es(EsConfig {
         jsx: true,
         ..Default::default()
@@ -26,7 +26,7 @@ fn graphql_tag_fixture(input: PathBuf) {
 
     // With strip false
     test_fixture(
-        syntax(),
+        get_syntax(),
         &|_tr| {
             as_folder(TransformVisitor::new(
                 GraphQLTagConfig {
@@ -50,7 +50,7 @@ fn graphql_tag_fixture(input: PathBuf) {
 
     // With strip true
     test_fixture(
-        syntax(),
+        get_syntax(),
         &|_tr| {
             as_folder(TransformVisitor::new(
                 GraphQLTagConfig {
@@ -87,7 +87,7 @@ fn unique_identifier_fixture(input: PathBuf) {
         tester.apply_transform(
             as_folder(&mut unique_visitor),
             "noop.js",
-            syntax(),
+            get_syntax(),
             &input_text,
         )?;
 

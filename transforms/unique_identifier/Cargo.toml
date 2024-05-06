@@ -5,5 +5,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-swc_ecma_ast = "0.110.9"
-swc_ecma_visit = "0.96.9"
+swc_ecma_ast = "^0.112.6"
+swc_ecma_visit = "^0.98.7"

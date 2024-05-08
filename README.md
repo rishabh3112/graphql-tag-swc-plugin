@@ -1,5 +1,7 @@
 # graphql-tag-swc-plugin
 
+This plugin is used in the sportsbook-web repo to compile the GQL queries at build time instead of runtime.
+
 SWC plugin alternative to `babel-plugin-graphql-tag`
 
 ## Installation

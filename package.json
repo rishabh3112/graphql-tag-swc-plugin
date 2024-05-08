@@ -1,6 +1,6 @@
 {
   "name": "@scorebet/graphql-tag-swc-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SWC plugin to expand gql tags at build time",
   "license": "ISC",
   "keywords": [

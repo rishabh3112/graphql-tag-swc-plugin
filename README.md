@@ -1,5 +1,9 @@
 # graphql-tag-swc-plugin
 
+[![NPM Downloads](https://img.shields.io/npm/d18m/graphql-tag-swc-plugin?style=for-the-badge&logo=npm)](https://www.npmjs.com/package/graphql-tag-swc-plugin)
+![GitHub Repo stars](https://img.shields.io/github/stars/rishabh3112/graphql-tag-swc-plugin?style=for-the-badge&logo=github)
+
+
 SWC plugin alternative to `babel-plugin-graphql-tag`
 
 ## Installation

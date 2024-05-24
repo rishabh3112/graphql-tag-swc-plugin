@@ -42,6 +42,15 @@ pub fn create_definition(definition: Definition, span: Span) -> Option<ExprOrSpr
 
 pub fn create_definitions(definitions: CstChildren<Definition>, span: Span) -> Expr {
     let mut all_definitions = vec![];
+    let definitions_length = definitions.clone().count();
+
+    if definitions_length > 1 && definitions.clone().filter(|def| match def {
+        Definition::OperationDefinition(_) => true,
+        _ => false
+    }).any(|def| def.name() == None) {
+        panic!("GraphQL query must have name.");
+    }
+
     for def in definitions {
         all_definitions.push(create_definition(def, span));
     }

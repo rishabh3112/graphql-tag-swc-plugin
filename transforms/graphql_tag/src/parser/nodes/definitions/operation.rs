@@ -34,7 +34,7 @@ pub fn create_operation_definition(definition: OperationDefinition, span: Span) 
         props: vec![kind, directives, variable_definitions, operation],
     };
 
-    if definition.name() != None {
+    if definition.name().is_some() {
         opr_def.props.insert(1,get_key_value_node(
             "name".into(),
             create_name(definition.name().unwrap().text().as_str().into(), span),

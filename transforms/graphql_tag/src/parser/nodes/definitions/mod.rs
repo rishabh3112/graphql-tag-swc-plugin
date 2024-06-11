@@ -11,7 +11,10 @@ mod operation;
 use fragment::create_fragment_definition;
 use operation::create_operation_definition;
 
-pub fn create_definition(definition: Definition, span: Span) -> Option<ExprOrSpread> {
+pub fn create_definition(definition: Definition, span: Span, is_multiple_definitions: bool) -> Option<ExprOrSpread> {
+    if is_multiple_definitions {
+        definition.name().expect("GraphQL query must have name.");
+    }
     let def_expr = match definition {
         Definition::FragmentDefinition(frag_def) => create_fragment_definition(frag_def, span),
         Definition::OperationDefinition(operation_def) => {
@@ -42,17 +45,10 @@ pub fn create_definition(definition: Definition, span: Span) -> Option<ExprOrSpr
 
 pub fn create_definitions(definitions: CstChildren<Definition>, span: Span) -> Expr {
     let mut all_definitions = vec![];
-    let definitions_length = definitions.clone().count();
-
-    if definitions_length > 1 && definitions.clone().filter(|def| match def {
-        Definition::OperationDefinition(_) => true,
-        _ => false
-    }).any(|def| def.name() == None) {
-        panic!("GraphQL query must have name.");
-    }
+    let is_multiple_definitions = definitions.clone().count() > 1;
 
     for def in definitions {
-        all_definitions.push(create_definition(def, span));
+        all_definitions.push(create_definition(def, span, is_multiple_definitions));
     }
 
     Expr::Array(ArrayLit {

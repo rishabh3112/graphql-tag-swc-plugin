@@ -11,8 +11,12 @@ mod operation;
 use fragment::create_fragment_definition;
 use operation::create_operation_definition;
 
-pub fn create_definition(definition: Definition, span: Span, is_multiple_definitions: bool) -> Option<ExprOrSpread> {
-    if is_multiple_definitions {
+pub fn create_definition(
+    definition: Definition,
+    span: Span,
+    assert_definition_name: bool,
+) -> Option<ExprOrSpread> {
+    if assert_definition_name {
         definition.name().expect("GraphQL query must have name.");
     }
     let def_expr = match definition {

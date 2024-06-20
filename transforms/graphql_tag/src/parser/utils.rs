@@ -10,10 +10,10 @@ pub fn get_key_value_node(key: String, value: Expr) -> PropOrSpread {
 }
 
 pub fn get_operation_token(operation_type: Option<OperationType>) -> String {
-    if operation_type.is_none() { 
+    if operation_type.is_none() {
         return "query".into();
     }
-    
+
     let opr_token = operation_type.unwrap();
 
     if opr_token.query_token().is_some() {

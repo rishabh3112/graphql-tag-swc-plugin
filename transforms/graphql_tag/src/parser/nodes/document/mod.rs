@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 // libs
 use apollo_parser::cst::Document;
-use swc_common::{comments::Comments, BytePos, Span};
+use swc_common::{comments::Comments, BytePos, Span, SyntaxContext};
 use swc_ecma_ast::*;
 
 // helpers
@@ -44,7 +44,7 @@ pub fn create_document<C: Comments>(
         let member_expr_for_definitions = MemberExpr {
             span,
             obj: _expression,
-            prop: MemberProp::Ident(Ident::new("definitions".into(), span)),
+            prop: MemberProp::Ident(IdentName::new("definitions".into(), span)),
         };
 
         all_expressions.push(ExprOrSpread {
@@ -58,10 +58,11 @@ pub fn create_document<C: Comments>(
         callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
             span,
             obj: Box::new(definitions_expr.clone()),
-            prop: MemberProp::Ident(Ident::new("concat".into(), span)),
+            prop: MemberProp::Ident(IdentName::new("concat".into(), span)),
         }))),
         args: all_expressions,
         type_args: None,
+        ctxt: SyntaxContext::default(),
     });
 
     let unique_fn_call_expr = Expr::Call(CallExpr {
@@ -69,12 +70,14 @@ pub fn create_document<C: Comments>(
         callee: Callee::Expr(Box::new(Expr::Ident(Ident::new(
             unique_fn_name.clone().into(),
             span,
+            SyntaxContext::default(),
         )))),
         args: vec![ExprOrSpread {
             spread: None,
             expr: Box::new(concat_definitions_expr.clone()),
         }],
         type_args: None,
+        ctxt: SyntaxContext::default(),
     });
 
     let definitions = get_key_value_node(

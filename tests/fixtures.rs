@@ -12,6 +12,7 @@ use graphql_tag::structs::{GraphQLTagConfig, TransformVisitor};
 use unique_identifier::UniqueIdentifierVisitor;
 
 fn get_syntax() -> Syntax {
+    // TODO: use EsSyntax instead
     Syntax::Es(EsConfig {
         jsx: true,
         ..Default::default()

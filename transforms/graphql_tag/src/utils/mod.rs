@@ -1,5 +1,7 @@
+use std::sync::Arc;
+
 // libs
-use swc_common::{BytePos, FileName::Anon, SourceFile};
+use swc_common::{BytePos, FileName::Anon, SourceFile, SyntaxContext};
 use swc_core::atoms::Atom;
 use swc_ecma_ast::*;
 use swc_ecma_parser::parse_file_as_expr;
@@ -21,7 +23,13 @@ const SOURCE: &str = "(definitions) => {
 }";
 
 pub fn add_unique_fn_to_program(program: &mut Program, unique_fn_name: String) {
-    let source_file = SourceFile::new(Anon, false, Anon, SOURCE.into(), BytePos(1));
+    let source_file = SourceFile::new(
+        Arc::new(Anon),
+        false,
+        Arc::new(Anon),
+        SOURCE.into(),
+        BytePos(1),
+    );
 
     let expr_result = parse_file_as_expr(
         &source_file,
@@ -41,10 +49,18 @@ pub fn add_unique_fn_to_program(program: &mut Program, unique_fn_name: String) {
                 declare: false,
                 decls: vec![VarDeclarator {
                     span: program.span,
-                    name: Pat::Ident(Ident::new(Atom::from(unique_fn_name), program.span).into()),
+                    name: Pat::Ident(
+                        Ident::new(
+                            Atom::from(unique_fn_name),
+                            program.span,
+                            SyntaxContext::default(),
+                        )
+                        .into(),
+                    ),
                     init: Some(expr_result),
                     definite: true,
                 }],
+                ctxt: SyntaxContext::default(),
             })))),
         ),
         Program::Script(program) => program.body.insert(
@@ -55,10 +71,18 @@ pub fn add_unique_fn_to_program(program: &mut Program, unique_fn_name: String) {
                 declare: false,
                 decls: vec![VarDeclarator {
                     span: program.span,
-                    name: Pat::Ident(Ident::new(Atom::from(unique_fn_name), program.span).into()),
+                    name: Pat::Ident(
+                        Ident::new(
+                            Atom::from(unique_fn_name),
+                            program.span,
+                            SyntaxContext::default(),
+                        )
+                        .into(),
+                    ),
                     init: Some(expr_result),
                     definite: true,
                 }],
+                ctxt: SyntaxContext::default(),
             }))),
         ),
     }

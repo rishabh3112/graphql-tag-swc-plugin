@@ -10,6 +10,18 @@ SWC plugin alternative to `babel-plugin-graphql-tag`
 npm install -D graphql-tag-swc-plugin
 ```
 
+## Building and deploying to Scorebet repository
+
+1. Build locally
+```
+npm run build
+```
+2. Create a local file `/.token` containing a personal access token with publish package scope for the scorebet organization
+3. Publish the package
+```
+npm run publish
+```
+
 ## Usage
 
 ### SWC

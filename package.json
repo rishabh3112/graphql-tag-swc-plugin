@@ -1,13 +1,14 @@
 {
   "name": "@scorebet/graphql-tag-swc-plugin",
-  "version": "1.0.1",
   "description": "SWC plugin to expand gql tags at build time",
   "license": "ISC",
+  "version": "1.1.1",
   "keywords": [
     "swc-plugin",
     "swc",
     "graphql"
   ],
+  "repository": "github:rishabh3112/graphql-tag-swc-plugin",
   "main": "graphql_tag_swc_plugin.wasm",
   "scripts": {
     "build": "cargo build-wasi --release && cp target/wasm32-wasi/release/graphql_tag_swc_plugin.wasm .",

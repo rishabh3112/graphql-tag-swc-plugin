@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 // libs
-use swc_common::{BytePos, FileName::Anon, SourceFile, SyntaxContext};
 use swc_core::atoms::Atom;
-use swc_ecma_ast::*;
-use swc_ecma_parser::parse_file_as_expr;
+use swc_core::common::{BytePos, FileName::Anon, SourceFile, SyntaxContext};
+use swc_core::ecma::ast::*;
+use swc_core::ecma::parser::parse_file_as_expr;
 
 const SOURCE: &str = "(definitions) => {
   const names = {};

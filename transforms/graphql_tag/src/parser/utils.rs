@@ -1,6 +1,6 @@
 use apollo_parser::{cst::OperationType, Error, Lexer, TokenKind};
 
-use swc_ecma_ast::*;
+use swc_core::ecma::ast::*;
 
 pub fn get_key_value_node(key: String, value: Expr) -> PropOrSpread {
     PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {

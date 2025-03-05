@@ -6,11 +6,10 @@ edition = "2021"
 
 [dependencies]
 apollo-parser = "0.7.5"
-swc_common = { version = "0.40.1", features = ["concurrent"] }
-swc_ecma_ast = "0.121.1"
-swc_ecma_visit = "0.107.0"
-swc_ecma_parser = "0.152.1"
-swc_core = { version = "0.106.3", features = ["ecma_plugin_transform"] }
+swc_core = { version = "16.0.0", features = [
+  "ecma_plugin_transform",
+  "__parser",
+] }
 regex = "1"
 serde = "1.0.193"
 serde_json = "1.0.108"

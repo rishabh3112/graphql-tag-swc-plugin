@@ -3,8 +3,8 @@ use std::collections::HashMap;
 
 // libs
 use apollo_parser::cst::Document;
-use swc_common::{comments::Comments, BytePos, Span, SyntaxContext};
-use swc_ecma_ast::*;
+use swc_core::common::{comments::Comments, BytePos, Span, SyntaxContext};
+use swc_core::ecma::ast::*;
 
 // helpers
 use crate::parser::{nodes::definitions::create_definitions, utils::get_key_value_node};

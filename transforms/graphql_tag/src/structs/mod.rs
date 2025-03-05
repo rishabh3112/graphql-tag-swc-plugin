@@ -1,10 +1,10 @@
 // built-ins
 use std::collections::HashMap;
 
-use swc_common::comments::Comments;
 // libs
 use miette::{Diagnostic, NamedSource, SourceSpan};
-use swc_ecma_ast::Expr;
+use swc_core::common::comments::Comments;
+use swc_core::ecma::ast::Expr;
 use thiserror::Error;
 
 pub struct GraphQLTagConfig {

@@ -3,9 +3,9 @@ use std::collections::HashMap;
 
 // libs
 use miette::NamedSource;
-use swc_common::comments::Comments;
-use swc_ecma_ast::*;
-use swc_ecma_visit::{VisitMut, VisitMutWith};
+use swc_core::common::comments::Comments;
+use swc_core::ecma::ast::*;
+use swc_core::ecma::visit::{VisitMut, VisitMutWith};
 
 // modules
 pub mod parser;

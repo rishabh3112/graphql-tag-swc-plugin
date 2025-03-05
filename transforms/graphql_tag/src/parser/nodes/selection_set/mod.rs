@@ -1,7 +1,7 @@
 // libs
 use apollo_parser::cst::{CstChildren, Selection, SelectionSet};
-use swc_common::Span;
-use swc_ecma_ast::*;
+use swc_core::common::Span;
+use swc_core::ecma::ast::*;
 
 // modules
 mod selection;

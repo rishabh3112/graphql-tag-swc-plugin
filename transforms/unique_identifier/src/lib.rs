@@ -1,6 +1,6 @@
 // libs
-use swc_ecma_ast::Ident;
-use swc_ecma_visit::VisitMut;
+use swc_core::ecma::ast::Ident;
+use swc_core::ecma::visit::VisitMut;
 
 pub struct UniqueIdentifierVisitor {
     pub identifier: String,

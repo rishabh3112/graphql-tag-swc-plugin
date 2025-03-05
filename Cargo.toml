@@ -8,17 +8,16 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-swc_core = { version = "0.106.3", features = ["ecma_plugin_transform"] }
-swc_ecma_ast = "0.121.1"
-swc_ecma_visit = "0.107.0"
-swc_ecma_parser = "0.152.1"
+swc_core = { version = "16.0.0", features = [
+  "ecma_plugin_transform",
+  "__parser",
+] }
 graphql_tag = { path = "./transforms/graphql_tag" }
 unique_identifier = { path = "./transforms/unique_identifier" }
 serde = "1.0.193"
 serde_json = "1.0.108"
 
 [dev-dependencies]
-swc_ecma_parser = "^0.143.10"
 testing = "0.35.24"
 
 # .cargo/config defines few alias to build plugin.

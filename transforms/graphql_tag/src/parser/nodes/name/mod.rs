@@ -1,6 +1,6 @@
 // libs
-use swc_common::Span;
-use swc_ecma_ast::*;
+use swc_core::common::Span;
+use swc_core::ecma::ast::*;
 
 // helpers
 use crate::parser::utils::get_key_value_node;

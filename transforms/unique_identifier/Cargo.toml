@@ -5,5 +5,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-swc_ecma_ast = "0.121.1"
-swc_ecma_visit = "0.107.0"
+swc_core = { version = "16.0.0", features = [
+  "ecma_plugin_transform",
+  "__parser",
+] }

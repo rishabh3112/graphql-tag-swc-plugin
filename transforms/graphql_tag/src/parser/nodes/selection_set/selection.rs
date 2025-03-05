@@ -1,7 +1,7 @@
 // libs
 use apollo_parser::cst::{Field, FragmentSpread, InlineFragment, Selection};
-use swc_common::Span;
-use swc_ecma_ast::*;
+use swc_core::common::Span;
+use swc_core::ecma::ast::*;
 
 // helpers
 use super::create_selection_set;

@@ -4,8 +4,8 @@ use apollo_parser::cst::{
     ObjectValue, StringValue, Value,
 };
 use regex::Regex;
-use swc_common::Span;
-use swc_ecma_ast::*;
+use swc_core::common::Span;
+use swc_core::ecma::ast::*;
 
 // helpers
 use crate::parser::{

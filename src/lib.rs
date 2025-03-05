@@ -1,12 +1,12 @@
 // libs
 use serde::Deserialize;
+use swc_core::ecma::ast::Program;
+use swc_core::ecma::visit::{visit_mut_pass, VisitMutWith};
 use swc_core::plugin::{
     metadata::TransformPluginMetadataContextKind,
     plugin_transform,
     proxies::{PluginCommentsProxy, TransformPluginProgramMetadata},
 };
-use swc_ecma_ast::Program;
-use swc_ecma_visit::{as_folder, FoldWith};
 
 // structs
 use graphql_tag::structs::{GraphQLTagConfig, TransformVisitor};
@@ -30,7 +30,7 @@ pub fn process_transform(program: Program, data: TransformPluginProgramMetadata)
     let mut program = program;
     let mut unique_visitor = UniqueIdentifierVisitor::new();
 
-    program = program.fold_with(&mut as_folder(&mut unique_visitor));
+    program.visit_mut_with(&mut visit_mut_pass(&mut unique_visitor));
 
     let unique_fn_name = if unique_visitor.count > 0 {
         format!("{}{}", unique_visitor.identifier, unique_visitor.count)
@@ -72,7 +72,7 @@ pub fn process_transform(program: Program, data: TransformPluginProgramMetadata)
         None => default_config,
     };
 
-    program = program.fold_with(&mut as_folder(TransformVisitor::new(
+    program.visit_mut_with(&mut visit_mut_pass(TransformVisitor::new(
         config,
         PluginCommentsProxy,
     )));

@@ -2,9 +2,9 @@
 use std::{fs, path::PathBuf};
 
 // libs
+use swc_core::ecma::parser::{EsSyntax, Syntax};
 use swc_core::ecma::transforms::testing::{test_fixture, FixtureTestConfig, Tester};
-use swc_ecma_parser::{EsConfig, Syntax};
-use swc_ecma_visit::as_folder;
+use swc_core::ecma::visit::visit_mut_pass;
 use testing::{fixture, NormalizedOutput};
 
 // structs
@@ -13,7 +13,7 @@ use unique_identifier::UniqueIdentifierVisitor;
 
 fn get_syntax() -> Syntax {
     // TODO: use EsSyntax instead
-    Syntax::Es(EsConfig {
+    Syntax::Es(EsSyntax {
         jsx: true,
         ..Default::default()
     })
@@ -29,7 +29,7 @@ fn graphql_tag_fixture(input: PathBuf) {
     test_fixture(
         get_syntax(),
         &|_tr| {
-            as_folder(TransformVisitor::new(
+            visit_mut_pass(TransformVisitor::new(
                 GraphQLTagConfig {
                     import_sources: vec!["@apollo/client".to_string(), "graphql-tag".into()],
                     gql_tag_identifiers: vec!["gql".to_string()],
@@ -46,6 +46,7 @@ fn graphql_tag_fixture(input: PathBuf) {
         FixtureTestConfig {
             allow_error: true,
             sourcemap: false,
+            module: Option::None,
         },
     );
 
@@ -53,7 +54,7 @@ fn graphql_tag_fixture(input: PathBuf) {
     test_fixture(
         get_syntax(),
         &|_tr| {
-            as_folder(TransformVisitor::new(
+            visit_mut_pass(TransformVisitor::new(
                 GraphQLTagConfig {
                     import_sources: vec!["@apollo/client".to_string(), "graphql-tag".into()],
                     gql_tag_identifiers: vec!["gql".to_string()],
@@ -70,6 +71,7 @@ fn graphql_tag_fixture(input: PathBuf) {
         FixtureTestConfig {
             allow_error: true,
             sourcemap: false,
+            module: Option::None,
         },
     );
 }
@@ -86,9 +88,10 @@ fn unique_identifier_fixture(input: PathBuf) {
     let actual_output = Tester::run(|tester| {
         let mut unique_visitor = UniqueIdentifierVisitor::new();
         tester.apply_transform(
-            as_folder(&mut unique_visitor),
+            visit_mut_pass(&mut unique_visitor),
             "noop.js",
             get_syntax(),
+            Option::None,
             &input_text,
         )?;
 

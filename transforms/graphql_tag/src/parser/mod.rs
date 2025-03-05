@@ -3,8 +3,8 @@ use std::collections::HashMap;
 
 // libs
 use apollo_parser::SyntaxTree;
-use swc_common::{comments::Comments, Span};
-use swc_ecma_ast::*;
+use swc_core::common::{comments::Comments, Span};
+use swc_core::ecma::ast::*;
 
 // modules
 mod nodes;
